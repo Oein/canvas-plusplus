@@ -1,0 +1,43 @@
+{
+  "name": "canvas-plus",
+  "version": "1.4.0",
+  "main": "./dist/index.js",
+  "description": "Lasso를 통한 Object 선택, rotate, scale, transform등을 지원하는 그림판.",
+  "license": "MIT",
+  "author": {
+    "name": "박오인",
+    "email": "oein0219@gmail.com"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.3",
+    "@types/pdfkit": "^0.13.5",
+    "@types/screenshot-desktop": "^1.12.3",
+    "electron": "^32",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.2"
+  },
+  "scripts": {
+    "start": "tsc && electron dist/index.js",
+    "build": "tsc && electron-builder --win --x64 -w"
+  },
+  "dependencies": {
+    "screenshot-desktop": "^1.15.0"
+  },
+  "build": {
+    "appId": "kr.oein.canvas-plus",
+    "directories": {
+      "output": "releases"
+    },
+    "win": {
+      "defaultArch": "x64",
+      "target": [
+        "portable",
+        "zip"
+      ]
+    },
+    "asarUnpack": [
+      "node_modules/screenshot-desktop/lib/win32/screenCapture_1.3.2.bat",
+      "node_modules/screenshot-desktop/lib/win32/app.manifest"
+    ]
+  }
+}

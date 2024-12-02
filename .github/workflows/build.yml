@@ -1,0 +1,43 @@
+name: Build exe
+on: [workflow_dispatch]
+jobs:
+  build:
+    name: Build exe
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('bun.lockb') }}-${{ hashFiles('electron/yarn.lock') }}
+      - name: Set up Nodejs
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: npm install
+      - name: Build vite
+        run: npm run build
+      - name: Upload web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-plus-web
+          path: ./dist
+      - name: Copy files
+        run: copy electron\web\wincap.html dist\wincap.html
+      - name: Copy files
+        run: Remove-Item -Path electron\web -Recurse -Force
+      - name: Copy files
+        run: xcopy /e /k /h /i dist electron\web
+      - name: Install dependencies
+        working-directory: ./electron
+        run: npm install
+      - name: Build electron
+        working-directory: ./electron
+        run: npm run build
+      - name: Upload exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-plus
+          path: ./electron/releases/canvas-plus-*-win.zip
