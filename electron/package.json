@@ -1,8 +1,8 @@
 {
-  "name": "canvas-plus",
-  "version": "1.4.0",
+  "name": "canvas-plus-plus",
+  "version": "2.0.0",
   "main": "./dist/index.js",
-  "description": "Lasso를 통한 Object 선택, rotate, scale, transform등을 지원하는 그림판.",
+  "description": "Two.JS를 활용한 그림판",
   "license": "MIT",
   "author": {
     "name": "박오인",
