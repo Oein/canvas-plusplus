@@ -66,10 +66,6 @@ const createWindow = () => {
     });
 
     ipcMain.on("cat", (event, arg) => {
-      capWin?.close();
-
-      //@ts-ignore
-      capWin = null;
       setTimeout(() => {
         console.log(arg);
         const dd = arg as {
@@ -82,7 +78,11 @@ const createWindow = () => {
         }).then((img) => {
           pngBuf = img;
           mainWindow.webContents.send("cap", dd);
-          mainWindow.maximize();
+
+          capWin?.setFullScreen(false);
+          capWin?.setKiosk(false);
+          capWin?.setPosition(25, 25);
+          capWin?.setSize(100, 35);
         });
       }, 50);
     });
