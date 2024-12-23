@@ -13,7 +13,7 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-let capWin: BrowserWindow;
+let capWin: BrowserWindow | null = null;
 let pngBuf: Buffer;
 const createWindow = () => {
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -49,24 +49,24 @@ const createWindow = () => {
 
     ipcMain.on("btp", (event, arg) => {
       mainWindow.maximize();
-      capWin.close();
+      capWin?.close();
     });
 
     ipcMain.on("cap", (event, arg) => {
-      capWin.setPosition(0, 0);
-      capWin.setSize(width, height);
+      capWin?.setPosition(0, 0);
+      capWin?.setSize(width, height);
       console.log("cap");
     });
 
     ipcMain.on("esc", (event, arg) => {
-      capWin.setFullScreen(false);
-      capWin.setKiosk(false);
-      capWin.setPosition(25, 25);
-      capWin.setSize(100, 35);
+      capWin?.setFullScreen(false);
+      capWin?.setKiosk(false);
+      capWin?.setPosition(25, 25);
+      capWin?.setSize(100, 35);
     });
 
     ipcMain.on("cat", (event, arg) => {
-      capWin.close();
+      capWin?.close();
 
       //@ts-ignore
       capWin = null;
@@ -89,7 +89,7 @@ const createWindow = () => {
 
     ipcMain.on("wincap", (event, arg) => {
       mainWindow.minimize();
-
+      if(capWin) capWin?.close();
       capWin = new BrowserWindow({
         width: 100,
         height: 35,
@@ -105,7 +105,7 @@ const createWindow = () => {
         y: 25,
         transparent: true,
       });
-      capWin.loadFile(path.join(__dirname, "..", "web", "wincap.html"));
+      capWin?.loadFile(path.join(__dirname, "..", "web", "wincap.html"));
     });
   }, 100);
 };
