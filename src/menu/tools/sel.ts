@@ -303,7 +303,7 @@ export class SelTool implements Tool {
         break;
       case "COPY2CLIPBOARD":
         el.style.right = "-30px";
-        el.style.top = "20px";
+        el.style.top = "00px";
         break;
     }
   }
@@ -570,8 +570,8 @@ export class SelTool implements Tool {
     const flipYButton = this.setupBBoxFlipYButton();
     this.bboxElem.appendChild(flipYButton);
 
-    const copyButton = this.setupBBoxCopyButton();
-    this.bboxElem.appendChild(copyButton);
+    // const copyButton = this.setupBBoxCopyButton();
+    // this.bboxElem.appendChild(copyButton);
 
     const copy2clipboardButton = this.setupBBoxCopy2clipboardButton();
     this.bboxElem.appendChild(copy2clipboardButton);
