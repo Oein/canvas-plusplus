@@ -16,27 +16,11 @@ export default class CoordinateInputModal {
   ) {
     // Create the modal container
     this.modal = document.createElement("div");
-    this.modal.style.position = "fixed";
-    this.modal.style.top = "0";
-    this.modal.style.left = "0";
-    this.modal.style.width = "100%";
-    this.modal.style.height = "100%";
-    this.modal.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
-    this.modal.style.display = "flex";
-    this.modal.style.justifyContent = "center";
-    this.modal.style.alignItems = "center";
-    this.modal.style.zIndex = "1000000000";
+    this.modal.className = "modalWRP";
 
     // Create the modal content box
     const contentBox = document.createElement("div");
-    contentBox.style.backgroundColor = "#fff";
-    contentBox.style.padding = "20px";
-    contentBox.style.borderRadius = "8px";
-    contentBox.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-    contentBox.style.maxWidth = "400px";
-    contentBox.style.width = "300px";
-    contentBox.style.boxSizing = "border-box";
-    contentBox.style.position = "relative";
+    contentBox.className = "modalCTT";
 
     if (heading) {
       const headingElement = document.createElement("h2");

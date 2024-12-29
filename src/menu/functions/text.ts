@@ -1,8 +1,9 @@
-import { registerFunction } from "..";
+import { applyToolExternal, registerFunction, tools } from "..";
 import { manager } from "../../main";
 import TextInputModal from "../../modal/textInputModal";
 import { getState } from "../../utils/state";
 import renderTextToImageWebPPrecise from "../../utils/textWebp";
+import { SelTool } from "../tools/sel";
 
 registerFunction("text", () => {
   const modal = new TextInputModal((text) => {
@@ -25,7 +26,7 @@ registerFunction("text", () => {
         scale = (window.innerHeight - GLOBAL_PADDING) / height;
       }
 
-      manager.focused.appendImage({
+      const id = manager.focused.appendImage({
         x: window.innerWidth / 2,
         y: window.innerHeight / 2,
         width: width * scale,
@@ -35,6 +36,9 @@ registerFunction("text", () => {
       });
       manager.focused.requestRender();
       manager.focused.saveAsHistory();
+
+      applyToolExternal("SEL");
+      (tools.SEL as SelTool).handleSelect([id]);
     };
     img.src = imgURL;
   });

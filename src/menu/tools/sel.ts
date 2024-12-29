@@ -10,8 +10,9 @@ import {
 } from "../../utils/listener";
 import { getState, isShift } from "../../utils/state";
 import type { Tool } from "./type";
+import { encode } from "cbor-x";
 
-class SelTool implements Tool {
+export class SelTool implements Tool {
   toolsArea: HTMLDivElement;
   constructor() {
     this.toolsArea = document.getElementById("toolsArea") as HTMLDivElement;
@@ -65,8 +66,10 @@ class SelTool implements Tool {
 
     this.toolsArea.appendChild(this.bboxElem);
   }
-  listenBBox() {
+  listenBBoxMove() {
     let startPos = { x: 0, y: 0 };
+    let movedWithShift = -1;
+    let moveMultiplier = 1;
     const a = addDownListener(this.bboxElem, (pos, e) => {
       if (this.state !== "SELECTED") return;
       e.stopPropagation();
@@ -76,14 +79,23 @@ class SelTool implements Tool {
       startPos = pos;
 
       this.instCanvas.style.cursor = "move";
+      moveMultiplier = 1;
+      movedWithShift = -1;
     });
     const b = addMoveListener(this.toolsArea, (pos, e) => {
       if (this.state !== "MOVING") return;
+      if (movedWithShift === -1) {
+        movedWithShift = isShift() ? 1 : 0;
+      }
+      if (movedWithShift) moveMultiplier = getState("LITTLE_MOVE_MULTIPLIER");
       e.stopPropagation();
       e.preventDefault();
 
-      const dx = pos.x - startPos.x;
-      const dy = pos.y - startPos.y;
+      let dx = pos.x - startPos.x;
+      let dy = pos.y - startPos.y;
+
+      dx *= moveMultiplier;
+      dy *= moveMultiplier;
 
       startPos = pos;
       for (const id of this.selectedObjects) {
@@ -244,7 +256,13 @@ class SelTool implements Tool {
   }
 
   setupBBoxToolButton(
-    type: "REMOVE" | "TRANSFORM" | "FLIPX" | "FLIPY" | "COPY",
+    type:
+      | "REMOVE"
+      | "TRANSFORM"
+      | "FLIPX"
+      | "FLIPY"
+      | "COPY"
+      | "COPY2CLIPBOARD",
     el: HTMLElement
   ) {
     el.style.position = "absolute";
@@ -282,6 +300,10 @@ class SelTool implements Tool {
       case "COPY":
         el.style.right = "-30px";
         el.style.top = "0px";
+        break;
+      case "COPY2CLIPBOARD":
+        el.style.right = "-30px";
+        el.style.top = "20px";
         break;
     }
   }
@@ -405,6 +427,34 @@ class SelTool implements Tool {
     return copyButton;
   }
 
+  setupBBoxCopy2clipboardButton() {
+    const copyButton = document.createElement("div");
+    this.setupBBoxToolButton("COPY2CLIPBOARD", copyButton);
+    this.setupBBoxButtonEventHandler(copyButton, () => {
+      manager.focused.getClipboardData(this.selectedObjects).then((data) => {
+        const buf = encode(data) as Uint8Array;
+        let res = getState("CLIPBOARD_PREFIX");
+        for (let i = 0; i < buf.length; i++) {
+          res += String.fromCharCode(buf[i]);
+        }
+
+        // copy buf to clipboard
+        const type = "text/plain";
+        const blob = new Blob([res], { type });
+
+        navigator.clipboard.write([
+          new ClipboardItem({
+            [type]: blob,
+          }),
+        ]);
+      });
+    });
+
+    copyButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentcolor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h167q11-35 43-57.5t70-22.5q40 0 71.5 22.5T594-840h166q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560h-80v120H280v-120h-80v560Zm280-560q17 0 28.5-11.5T520-800q0-17-11.5-28.5T480-840q-17 0-28.5 11.5T440-800q0 17 11.5 28.5T480-760Z"/></svg>`;
+
+    return copyButton;
+  }
+
   createBBoxRotate() {
     this.bboxRotateElem = document.createElement("div");
     this.bboxRotateElem.style.position = "absolute";
@@ -488,6 +538,9 @@ class SelTool implements Tool {
       for (const id of this.selectedObjects) {
         manager.focused.cachePolygon(id);
       }
+      if (this.selectedObjects.length > 0) {
+        manager.focused.saveAsHistory();
+      }
     });
 
     this.bboxListenDestroiers.push(a);
@@ -497,7 +550,7 @@ class SelTool implements Tool {
 
   setupBBox() {
     this.createBBox();
-    this.listenBBox();
+    this.listenBBoxMove();
 
     this.createBBoxScale();
     this.listenBBoxScale();
@@ -519,6 +572,9 @@ class SelTool implements Tool {
 
     const copyButton = this.setupBBoxCopyButton();
     this.bboxElem.appendChild(copyButton);
+
+    const copy2clipboardButton = this.setupBBoxCopy2clipboardButton();
+    this.bboxElem.appendChild(copy2clipboardButton);
   }
 
   handleSelect(objects: number[]) {
@@ -587,6 +643,23 @@ class SelTool implements Tool {
 
       isDrawing = false;
       points.push(pos);
+
+      if (points.length < 10) {
+        const avgX =
+          points.reduce((acc, cur) => acc + cur.x, 0) / points.length;
+        const avgY =
+          points.reduce((acc, cur) => acc + cur.y, 0) / points.length;
+
+        const sobj = manager.focused.pointSelect({
+          x: avgX,
+          y: avgY,
+        });
+
+        if (sobj.length == 0) return;
+        this.handleSelect(sobj);
+        return;
+      }
+
       const selectedObjects = manager.focused.lassoSelect(points);
 
       if (selectedObjects.length === 0) return;

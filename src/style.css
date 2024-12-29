@@ -1,3 +1,15 @@
+@import "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.6/dist/web/variable/pretendardvariable.css";
+:root {
+  --Font-base: Pretendard Variable, Pretendard, -apple-system,
+    BlinkMacSystemFont, system-ui, Roboto, Helvetica Neue, Segoe UI,
+    Apple SD Gothic Neo, Noto Sans KR, Malgun Gothic, "Apple Color Emoji",
+    "Segoe UI Emoji", Segoe UI Symbol, sans-serif;
+}
+
+body {
+  font-family: var(--Font-base);
+}
+
 body {
   margin: 0px;
   padding: 0px;
@@ -55,7 +67,7 @@ body {
   display: flex;
   gap: 0.4rem;
   align-items: center;
-  overflow: hidden;
+  overflow: visible;
 
   width: fit-content;
   min-width: max-content;
@@ -196,4 +208,49 @@ body {
   min-width: fit-content;
 
   user-select: none;
+}
+
+#cfg {
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%) translateX(-100%);
+
+  width: 20px;
+  height: 20px;
+  /* overflow: hidden; */
+  cursor: pointer;
+  color: #fff;
+  background: #000;
+  padding: 4px;
+  border-radius: 3px;
+}
+
+#cfg > svg {
+  width: 100%;
+  height: 100%;
+}
+
+.modalWRP {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000000000;
+}
+
+.modalCTT {
+  background-color: rgb(255, 255, 255);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 8px;
+  max-width: 400px;
+  width: 90%;
+  box-sizing: border-box;
+  position: relative;
 }

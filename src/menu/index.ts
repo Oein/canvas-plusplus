@@ -24,12 +24,18 @@ export function applyTool(id: string, isRecall = false) {
   __destructor = tools[id].apply(isRecall);
 }
 
+let selectedTool = 0;
+
+export function applyToolExternal(id: string) {
+  const button = document.querySelector(`.tool-button[data-tool="${id}"]`);
+  if (!button) return;
+  (button as any).click();
+}
+
 export default function setupTool() {
   setupColor();
   setupStroke();
   setupPage();
-
-  let selectedTool = 0;
 
   const toolButtons = document.querySelectorAll(".tool-button");
   toolButtons.forEach((button, idx) => {

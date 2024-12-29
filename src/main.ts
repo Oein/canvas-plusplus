@@ -1,7 +1,9 @@
 import InstanceManager from "./instance/manager";
 import "./style.css";
-import setupTool from "./menu";
+import setupTool, { applyToolExternal, tools } from "./menu";
 import { getState } from "./utils/state";
+import { decode } from "cbor-x";
+import { SelTool } from "./menu/tools/sel";
 
 export let manager: InstanceManager;
 
@@ -112,11 +114,35 @@ const main = () => {
     );
   } catch (e) {}
 
-  const pasteImage = (e: ClipboardEvent) => {
+  const pasteData = (e: ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
 
     for (let i = 0; i < items.length; i++) {
+      if (items[i].type === "text/plain") {
+        items[i].getAsString((text) => {
+          if (!text.startsWith(getState("CLIPBOARD_PREFIX"))) return;
+          const data = text.slice(
+            getState("CLIPBOARD_PREFIX").length
+          ) as string;
+          // data as uint8array
+          const u8a = new Uint8Array(data.length);
+          for (let i = 0; i < data.length; i++) {
+            u8a[i] = data.charCodeAt(i);
+          }
+          const decoded = decode(u8a);
+          manager.focused.importFromClipboard(decoded).then((el) => {
+            // console.log(el);
+            // console.log(tools.SEL);
+            applyToolExternal("SEL");
+            setTimeout(() => {
+              console.log(el);
+              (tools.SEL as SelTool).handleSelect(el);
+            });
+          });
+        });
+        continue;
+      }
       if (items[i].type.indexOf("image") === -1) continue;
       const blob = items[i].getAsFile();
       if (!blob) continue;
@@ -156,7 +182,38 @@ const main = () => {
       reader.readAsDataURL(blob);
     }
   };
-  document.addEventListener("paste", pasteImage);
+  document.addEventListener("paste", pasteData);
+
+  document.getElementById("stv")?.addEventListener("click", (e) => {
+    const self = e.target as HTMLElement;
+    self.style.display = "none";
+  });
+  document.getElementById("stvc")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+  document.getElementById("cfg")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const wp = document.getElementById("stv");
+    if (wp) {
+      wp.style.display = "flex";
+    }
+  });
+
+  setInterval(() => {
+    // console.log("Applying paste prevention");
+    const el = [
+      ...document.querySelectorAll('input:not([data-pvap="true"])'),
+      ...document.querySelectorAll('textarea:not([data-pvap="true"])'),
+    ];
+    el.forEach((e) => {
+      // console.log("Applying paste prevention", e);
+      e.setAttribute("data-pvap", "true");
+      (e as HTMLInputElement).addEventListener("paste", (e) => {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      });
+    });
+  }, 50);
 };
 
 main();

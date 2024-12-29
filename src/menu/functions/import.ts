@@ -2,11 +2,12 @@ import { registerFunction } from "..";
 import { manager } from "../../main";
 
 import { decode } from "cbor-x";
+import { getState } from "../../utils/state";
 
 registerFunction("import", () => {
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = ".drawing";
+  input.accept = getState("SAVE_EXTENSION");
 
   input.addEventListener("change", async () => {
     const file = input.files?.[0];

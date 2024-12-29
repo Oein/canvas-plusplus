@@ -232,25 +232,44 @@ export class Instance {
     rotate: number;
     image: HTMLImageElement;
   }) {
-    const texture = new Two.Texture(props.image);
+    const texture = new Two.Texture(props.image, () => {});
     const image = this.two.makeSprite(texture, props.x, props.y);
+    // image.scale = new Two.Vector(0.6, 0.6);
+    image.width = props.width;
+    image.height = props.height;
     image.rotation = props.rotate;
+    image.position = new Two.Vector(props.x, props.y);
 
-    const imageXS = props.width / props.image.width;
-    const imageYS = props.height / props.image.height;
-
+    const imageXS = props.width / texture.image.width;
+    const imageYS = props.height / texture.image.height;
     image.scale = new Two.Vector(imageXS, imageYS);
+
+    // console.log(
+    //   "Width",
+    //   props.width,
+    //   "Height",
+    //   props.height,
+    //   "Image Width",
+    //   texture.image.width,
+    //   "Image Height",
+    //   texture.image.height,
+    //   "Scale",
+    //   imageXS,
+    //   imageYS
+    // );
 
     const id = this.getNewID();
     this.twoElements[id] = image;
-    const halfWidth = props.width / 2;
-    const halfHeight = props.height / 2;
+    let halfWidth = props.width / 2;
+    let halfHeight = props.height / 2;
+
     this.cachecdPolygon[id] = [
       { x: props.x - halfWidth, y: props.y - halfHeight },
       { x: props.x + halfWidth, y: props.y - halfHeight },
       { x: props.x + halfWidth, y: props.y + halfHeight },
       { x: props.x - halfWidth, y: props.y + halfHeight },
     ];
+    console.log(this.cachecdPolygon[id]);
     return id;
   }
 
@@ -311,7 +330,13 @@ export class Instance {
 
     // Update element translation and rotation
     element.translation.set(newX + x, newY + y);
-    element.rotation += angle;
+    const multix =
+      typeof element.scale === "number" ? element.scale : element.scale.x;
+    const multiy =
+      typeof element.scale === "number" ? element.scale : element.scale.y;
+    const negx = multix >= 0 ? 1 : -1;
+    const negy = multiy >= 0 ? 1 : -1;
+    element.rotation += angle * negx * negy;
   }
 
   setRotate(id: number, angle: number) {
@@ -497,6 +522,23 @@ export class Instance {
     return selected;
   }
 
+  pointSelect(pos: { x: number; y: number }): number[] {
+    // get the heightest element at the point
+    let highest = -1;
+    let highestID = -1;
+    for (const key in this.twoElements) {
+      if (isPointInPolygon(pos, this.cachecdPolygon[Number(key)])) {
+        if (Number(key) > highest) {
+          highest = Number(key);
+          highestID = Number(key);
+        }
+      }
+    }
+
+    if (highestID !== -1) return [highestID];
+    return [];
+  }
+
   saveAsHistory() {
     const elements = Object.keys(this.twoElements).map((id) => {
       return this.exportElement(Number(id));
@@ -515,9 +557,7 @@ export class Instance {
 
     for (const element of elements) {
       if (element.type === "image") {
-        const nid = this.appendImage(element);
-        this.twoElements[nid].rotation = element.rotate;
-        this.twoElements[nid].scale = element.scale;
+        this.appendImage(element);
       } else {
         const nid = this.getNewID();
         this.twoElements[nid] = element.isPen
@@ -566,8 +606,16 @@ export class Instance {
             type: "image",
             x: elementPos.x,
             y: elementPos.y,
-            width: element.width,
-            height: element.height,
+            width:
+              element.width *
+              (typeof element.scale == "number"
+                ? element.scale
+                : element.scale.x),
+            height:
+              element.height *
+              (typeof element.scale == "number"
+                ? element.scale
+                : element.scale.y),
             rotate: element.rotation,
             image: arrayBuffer,
             scale:
@@ -585,8 +633,12 @@ export class Instance {
         type: "image",
         x: elementPos.x,
         y: elementPos.y,
-        width: element.width,
-        height: element.height,
+        width:
+          element.texture.image.width *
+          (typeof element.scale == "number" ? element.scale : element.scale.x),
+        height:
+          element.texture.image.height *
+          (typeof element.scale == "number" ? element.scale : element.scale.y),
         rotate: element.rotation,
         image: texture,
         scale:
@@ -619,6 +671,14 @@ export class Instance {
       dash: element.dashes,
       isPen: (element as any).canvasData === "PEN",
     };
+  }
+
+  async getClipboardData(objectIds: number[]) {
+    const res: any[] = [];
+    for (const id of objectIds) {
+      res.push(await this.exportElement(id, true));
+    }
+    return res;
   }
 
   exportAsImage() {
@@ -720,6 +780,78 @@ export class Instance {
     }
 
     this.requestRender();
+  }
+
+  async importFromClipboard(data: any[]) {
+    let ids: number[] = [];
+    for (const element of data) {
+      if (element.type === "image") {
+        const img = new Image();
+
+        const blob = new Blob([element.image], { type: "image/webp" });
+
+        await new Promise<void>((resolve) => {
+          img.onload = () => {
+            img.onload = null;
+
+            const nid = this.appendImage({
+              x: element.x,
+              y: element.y,
+              width: element.width,
+              height: element.height,
+              image: img,
+              rotate: element.rotate,
+            });
+            ids.push(nid);
+            this.twoElements[nid].rotation = element.rotate;
+            if (typeof element.scale === "number")
+              this.twoElements[nid].scale = new Two.Vector(
+                element.scale,
+                element.scale
+              );
+            else
+              this.twoElements[nid].scale = new Two.Vector(
+                element.scale.x,
+                element.scale.y
+              );
+
+            resolve();
+          };
+
+          const url = URL.createObjectURL(blob);
+          img.src = url;
+        });
+      } else {
+        const nid = this.getNewID();
+        ids.push(nid);
+        this.twoElements[nid] = element.isPen
+          ? this.two.makePath(
+              element.points.map((v: { x: number; y: number }) => {
+                return new Two.Anchor(v.x, v.y);
+              }),
+              // @ts-ignore
+              false,
+              true
+            )
+          : this.two.makePath(
+              element.points.map((v: { x: number; y: number }) => {
+                return new Two.Anchor(v.x, v.y);
+              })
+            );
+
+        const e = this.twoElements[nid];
+        e.fill = element.fillColor;
+        e.stroke = element.strokeColor;
+        e.linewidth = element.strokeWidth;
+        e.dashes = element.dash;
+        e.rotation = element.rotation;
+        e.scale = element.scale;
+      }
+    }
+
+    this.requestRender();
+
+    return ids;
   }
 
   destroy() {

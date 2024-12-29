@@ -23,6 +23,58 @@ export class LineTool implements Tool {
     let isDrawing = false;
     let startPos = { x: 0, y: 0 };
 
+    const get_snapXY = (
+      startX: number,
+      startY: number,
+      endX: number,
+      endY: number,
+      deg: number
+    ) => {
+      let xmove, ymove, minMove, xneg, yneg;
+      switch (deg) {
+        case 0:
+          return { x: endX, y: startY };
+        case 45:
+          xmove = endX - startX;
+          ymove = endY - startY;
+          minMove = Math.abs(Math.min(xmove, ymove));
+          xneg = xmove < 0 ? -1 : 1;
+          yneg = ymove < 0 ? -1 : 1;
+          return { x: startX + minMove * xneg, y: startY + minMove * yneg };
+        case 90:
+          return { x: startX, y: endY };
+        case 135:
+          xmove = endX - startX;
+          ymove = endY - startY;
+          minMove = Math.abs(Math.min(xmove, ymove));
+          xneg = xmove < 0 ? -1 : 1;
+          yneg = ymove < 0 ? -1 : 1;
+          return { x: startX + minMove * xneg, y: startY + minMove * yneg };
+        case 180:
+          return { x: endX, y: startY };
+        case -45:
+          xmove = endX - startX;
+          ymove = endY - startY;
+          minMove = Math.abs(Math.min(xmove, ymove));
+          xneg = xmove < 0 ? -1 : 1;
+          yneg = ymove < 0 ? -1 : 1;
+          return { x: startX + minMove * xneg, y: startY + minMove * yneg };
+        case -90:
+          return { x: startX, y: endY };
+        case -135:
+          xmove = endX - startX;
+          ymove = endY - startY;
+          minMove = Math.abs(Math.min(xmove, ymove));
+          xneg = xmove < 0 ? -1 : 1;
+          yneg = ymove < 0 ? -1 : 1;
+          return { x: startX + minMove * xneg, y: startY + minMove * yneg };
+        case -180:
+          return { x: endX, y: startY };
+      }
+
+      return { x: endX, y: endY };
+    };
+
     const d1 = addDownListener(inst.canvas, (pos) => {
       isDrawing = true;
       startPos = pos;
@@ -44,44 +96,29 @@ export class LineTool implements Tool {
       let deg = rad * (180 / Math.PI);
 
       if (getState("SNAP_RIGHT")) {
-        if (deg <= getState("SNAP_DEG") && deg >= -getState("SNAP_DEG")) {
-          y = startPos.y;
-          deg = 0;
-        }
-        if (
-          deg >= 90 - getState("SNAP_DEG") &&
-          deg <= 90 + getState("SNAP_DEG")
-        ) {
-          x = startPos.x;
-          deg = 90;
-        }
-        if (
-          deg >= 180 - getState("SNAP_DEG") ||
-          deg <= -180 + getState("SNAP_DEG")
-        ) {
-          y = startPos.y;
-          deg = 180;
-        }
-        if (
-          deg >= -90 - getState("SNAP_DEG") &&
-          deg <= -90 + getState("SNAP_DEG")
-        ) {
-          x = startPos.x;
-          deg = -90;
+        // snap by 45 degree
+        for (let i = 0; i < 360 / 45; i++) {
+          let deg45 = i * 45;
+          if (deg45 > 180) deg45 -= 360;
+          if (
+            deg <= deg45 + getState("SNAP_DEG") &&
+            deg >= deg45 - getState("SNAP_DEG")
+          ) {
+            deg = deg45;
+            break;
+          }
         }
       }
 
       if (isShift()) {
-        const dx = Math.abs(x - startPos.x);
-        const dy = Math.abs(y - startPos.x);
-        if (dx > dy) {
-          y = startPos.y;
-          deg = startPos.x < x ? 0 : 180;
-        } else {
-          x = startPos.x;
-          deg = startPos.y < y ? 90 : -90;
-        }
+        // get most close 45 degree
+        const deg45 = Math.round(deg / 45) * 45;
+        deg = deg45;
       }
+
+      const snapped = get_snapXY(startPos.x, startPos.y, x, y, deg);
+      x = snapped.x;
+      y = snapped.y;
 
       inst.ctx.beginPath();
       inst.ctx.moveTo(startPos.x, startPos.y);
@@ -102,44 +139,29 @@ export class LineTool implements Tool {
       let deg = rad * (180 / Math.PI);
 
       if (getState("SNAP_RIGHT")) {
-        if (deg <= getState("SNAP_DEG") && deg >= -getState("SNAP_DEG")) {
-          y = startPos.y;
-          deg = 0;
-        }
-        if (
-          deg >= 90 - getState("SNAP_DEG") &&
-          deg <= 90 + getState("SNAP_DEG")
-        ) {
-          x = startPos.x;
-          deg = 90;
-        }
-        if (
-          deg >= 180 - getState("SNAP_DEG") ||
-          deg <= -180 + getState("SNAP_DEG")
-        ) {
-          y = startPos.y;
-          deg = 180;
-        }
-        if (
-          deg >= -90 - getState("SNAP_DEG") &&
-          deg <= -90 + getState("SNAP_DEG")
-        ) {
-          x = startPos.x;
-          deg = -90;
+        // snap by 45 degree
+        for (let i = 0; i < 360 / 45; i++) {
+          let deg45 = i * 45;
+          if (deg45 > 180) deg45 -= 360;
+          if (
+            deg <= deg45 + getState("SNAP_DEG") &&
+            deg >= deg45 - getState("SNAP_DEG")
+          ) {
+            deg = deg45;
+            break;
+          }
         }
       }
 
       if (isShift()) {
-        const dx = Math.abs(x - startPos.x);
-        const dy = Math.abs(y - startPos.x);
-        if (dx > dy) {
-          y = startPos.y;
-          deg = startPos.x < x ? 0 : 180;
-        } else {
-          x = startPos.x;
-          deg = startPos.y < y ? 90 : -90;
-        }
+        // get most close 45 degree
+        const deg45 = Math.round(deg / 45) * 45;
+        deg = deg45;
       }
+
+      const snapped = get_snapXY(startPos.x, startPos.y, x, y, deg);
+      x = snapped.x;
+      y = snapped.y;
 
       manager.focused.appendLine({
         x1: startPos.x,
