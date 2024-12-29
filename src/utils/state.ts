@@ -7,6 +7,7 @@ const state: any = {
   SNAP_RIGHT: true,
   SHIFT: false,
   SHIFTTOOL: false,
+  RCLICK2ERASE: true,
 
   SNAP_DEG: 2.5,
   PEN_MIN_DIST: 1,
@@ -27,6 +28,7 @@ const stateDesc: any = {
   STROKE: "팬의 굵기",
   SNAP_RIGHT: "45도 단위로 가까워질 경우 선을 45도로 스냅",
   SNAP_DEG: "스냅 허용 오차 각도",
+  RCLICK2ERASE: "펜모드에서 우클릭으로 지우기",
   PEN_MIN_DIST: "펜의 최소 이동 거리",
   TEXT_RES: "텍스트 이미지 해상도",
   IMAGE_GLOBAL_PADDING: "이미지/텍스트 추가 시 화면 가장자리와의 최소 간격",

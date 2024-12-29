@@ -6,7 +6,6 @@ import {
   addMoveListener,
   addUpListener,
 } from "../../utils/listener";
-import { getState } from "../../utils/state";
 import type { Tool } from "./type";
 
 class EraseTool implements Tool {
@@ -37,7 +36,7 @@ class EraseTool implements Tool {
     const d2 = addMoveListener(document, (pos) => {
       if (!isDrawing) return;
       const dist = Math.hypot(lastApplied.x - pos.x, lastApplied.y - pos.y);
-      if (dist < getState("PEN_MIN_DIST")) return;
+      if (dist < 1) return;
       lastApplied = pos;
       const rmved = manager.focused.removeAt(pos);
       if (rmved.length) {
