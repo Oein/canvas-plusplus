@@ -89,7 +89,10 @@ const createWindow = () => {
 
     ipcMain.on("wincap", (event, arg) => {
       mainWindow.minimize();
+      try {
+        
       if(capWin) capWin?.close();
+      } catch(e) {}
       capWin = new BrowserWindow({
         width: 100,
         height: 35,
