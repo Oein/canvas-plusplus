@@ -1,5 +1,5 @@
 name: Build exe
-on: [workflow_dispatch]
+on: [workflow_dispatch, push]
 jobs:
   build:
     name: Build exe
