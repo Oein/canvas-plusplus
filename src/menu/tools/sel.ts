@@ -12,6 +12,16 @@ import { getState, isShift } from "../../utils/state";
 import type { Tool } from "./type";
 import { encode } from "cbor-x";
 
+const ua = navigator.userAgent.toLowerCase();
+const isMac =
+  ua.indexOf("mac") > -1 &&
+  ua.indexOf("os") > -1 &&
+  !(
+    ua.indexOf("iphone") > -1 ||
+    ua.indexOf("ipad") > -1 ||
+    ua.indexOf("windows") > -1
+  );
+
 export class SelTool implements Tool {
   toolsArea: HTMLDivElement;
   constructor() {
@@ -303,7 +313,7 @@ export class SelTool implements Tool {
         break;
       case "COPY2CLIPBOARD":
         el.style.right = "-30px";
-        el.style.top = "00px";
+        el.style.top = "30px";
         break;
     }
   }
@@ -570,11 +580,39 @@ export class SelTool implements Tool {
     const flipYButton = this.setupBBoxFlipYButton();
     this.bboxElem.appendChild(flipYButton);
 
-    // const copyButton = this.setupBBoxCopyButton();
-    // this.bboxElem.appendChild(copyButton);
+    const copyButton = this.setupBBoxCopyButton();
+    this.bboxElem.appendChild(copyButton);
 
     const copy2clipboardButton = this.setupBBoxCopy2clipboardButton();
     this.bboxElem.appendChild(copy2clipboardButton);
+
+    // listen for ctrl c
+    const listener = (e: KeyboardEvent) => {
+      if (e.key === "c" && (isMac ? e.metaKey : e.ctrlKey)) {
+        console.log("copy2clipboard");
+        manager.focused.getClipboardData(this.selectedObjects).then((data) => {
+          const buf = encode(data) as Uint8Array;
+          let res = getState("CLIPBOARD_PREFIX");
+          for (let i = 0; i < buf.length; i++) {
+            res += String.fromCharCode(buf[i]);
+          }
+
+          // copy buf to clipboard
+          const type = "text/plain";
+          const blob = new Blob([res], { type });
+
+          navigator.clipboard.write([
+            new ClipboardItem({
+              [type]: blob,
+            }),
+          ]);
+        });
+      }
+    };
+    document.addEventListener("keydown", listener);
+    this.bboxListenDestroiers.push(() => {
+      document.removeEventListener("keydown", listener);
+    });
   }
 
   handleSelect(objects: number[]) {

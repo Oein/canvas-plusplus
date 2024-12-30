@@ -121,6 +121,7 @@ const main = () => {
     for (let i = 0; i < items.length; i++) {
       if (items[i].type === "text/plain") {
         items[i].getAsString((text) => {
+          // console.log(text);
           if (!text.startsWith(getState("CLIPBOARD_PREFIX"))) return;
           const data = text.slice(
             getState("CLIPBOARD_PREFIX").length

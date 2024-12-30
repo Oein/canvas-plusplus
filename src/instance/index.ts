@@ -18,6 +18,8 @@ export class Instance {
   twoElements: { [key: number]: Path } = {};
   cachecdPolygon: { [key: number]: { x: number; y: number }[] } = {};
 
+  canvasData: { [key: number]: any } = {};
+
   focused: boolean = true;
   renderRequested: boolean = false;
 
@@ -193,7 +195,7 @@ export class Instance {
     path.fill = "transparent";
 
     this.twoElements[id] = path;
-    (this.twoElements[id] as any).canvasData = "PEN";
+    this.canvasData[id] = "PEN";
     return id;
   }
 
@@ -269,7 +271,6 @@ export class Instance {
       { x: props.x + halfWidth, y: props.y + halfHeight },
       { x: props.x - halfWidth, y: props.y + halfHeight },
     ];
-    console.log(this.cachecdPolygon[id]);
     return id;
   }
 
@@ -455,6 +456,7 @@ export class Instance {
     const newID = this.getNewID();
     this.twoElements[newID] = clone as Path;
     this.cachecdPolygon[newID] = [...this.cachecdPolygon[id]];
+    this.canvasData[newID] = this.canvasData[id];
 
     return newID;
   }
@@ -625,6 +627,7 @@ export class Instance {
                     x: element.scale.x,
                     y: element.scale.y,
                   },
+            canvasData: this.canvasData[id],
           });
         });
       }
@@ -669,7 +672,8 @@ export class Instance {
       strokeColor: element.stroke,
       strokeWidth: element.linewidth,
       dash: element.dashes,
-      isPen: (element as any).canvasData === "PEN",
+      isPen: this.canvasData[id] === "PEN",
+      cnavasData: this.canvasData[id],
     };
   }
 
@@ -776,6 +780,13 @@ export class Instance {
         e.dashes = element.dash;
         e.rotation = element.rotation;
         e.scale = element.scale;
+
+        const poly = element.points.map((v: { x: number; y: number }) => {
+          return { x: v.x, y: v.y };
+        });
+        const polystroke = generateStrokedPolygon(poly, element.strokeWidth);
+        this.cachecdPolygon[nid] = [...polystroke];
+        this.canvasData[nid] = element.isPen ? "PEN" : "PATH";
       }
     }
 
@@ -846,10 +857,18 @@ export class Instance {
         e.dashes = element.dash;
         e.rotation = element.rotation;
         e.scale = element.scale;
+
+        const poly = element.points.map((v: { x: number; y: number }) => {
+          return { x: v.x, y: v.y };
+        });
+        const polystroke = generateStrokedPolygon(poly, element.strokeWidth);
+        this.cachecdPolygon[nid] = [...polystroke];
+        this.canvasData[nid] = element.isPen ? "PEN" : "PATH";
       }
     }
 
     this.requestRender();
+    this.saveAsHistory();
 
     return ids;
   }
