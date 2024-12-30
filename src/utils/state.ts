@@ -1,6 +1,6 @@
 const svc = document.getElementById("stateViewerContent")! as HTMLTableElement;
 
-const state: any = {
+const ORIGINAL_STATE = {
   COLOR: "#000000",
   STROKE: 3,
   DASHLINE: [],
@@ -22,6 +22,8 @@ const state: any = {
   CLIPBOARD_PREFIX: "[aris_is_love]!",
   SAVE_EXTENSION: ".aris",
 };
+
+let state: any = { ...ORIGINAL_STATE };
 
 const stateDesc: any = {
   COLOR: "팬의 색상",
@@ -122,6 +124,16 @@ export function setState(key: string, value: any) {
       input.value = value.toString();
     }
   }
+
+  localStorage.setItem("state", JSON.stringify(state));
+}
+
+if (localStorage.getItem("state")) {
+  try {
+    state = JSON.parse(localStorage.getItem("state")!);
+  } catch (e) {
+    state = { ...ORIGINAL_STATE };
+  }
 }
 
 (window as any).getState = getState;
@@ -139,3 +151,48 @@ for (const key in state) {
     svc.appendChild(el);
   }
 }
+
+document.getElementById("st-saf")?.addEventListener("click", () => {
+  // download state as file
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(
+    new Blob([JSON.stringify(state)], { type: "application/json" })
+  );
+  a.download = "canvas_config.json";
+  a.click();
+});
+
+document.getElementById("st-lff")?.addEventListener("click", () => {
+  // load state from file
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json";
+
+  input.addEventListener("change", (e) => {
+    const tar = e.target as HTMLInputElement;
+    if (!tar) return;
+    const files = tar.files;
+    if (!files) return;
+    if (files.length == 0) return;
+    const file = files[0];
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const res = e.target?.result;
+      if (!res) return;
+      try {
+        const newState = JSON.parse(res as string);
+        for (const key in newState) {
+          setState(key, newState[key]);
+        }
+      } catch (e) {
+        console.error(e);
+        alert("파일을 읽는 중 오류가 발생했습니다.");
+      }
+    };
+
+    reader.readAsText(file);
+  });
+
+  input.click();
+});

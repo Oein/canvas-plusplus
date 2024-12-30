@@ -253,4 +253,23 @@ body {
   width: 90%;
   box-sizing: border-box;
   position: relative;
+
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.stvb {
+  margin-right: 10px;
+  padding: 10px 20px;
+  border: medium;
+  background-color: rgb(0, 123, 255);
+  color: rgb(255, 255, 255);
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.stvb:last-child {
+  background-color: rgb(204, 204, 204);
+  color: rgb(0, 0, 0);
 }
