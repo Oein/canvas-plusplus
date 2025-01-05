@@ -17,7 +17,7 @@
     "typescript": "^5.7.2"
   },
   "scripts": {
-    "start": "tsc && electron dist/index.js",
+    "start": "tsc && electron --enable-transparent-visuals --disable-gpu dist/index.js",
     "build": "tsc && electron-builder --win --x64 -w"
   },
   "dependencies": {

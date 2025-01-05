@@ -13,8 +13,136 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-let capWin: BrowserWindow | null = null;
 let pngBuf: Buffer;
+
+class CapwinHandler {
+  private setPNGBuf: (buf: Buffer) => void;
+  private mainWindow: BrowserWindow;
+  private capWin: BrowserWindow | null = null;
+  private width: number;
+  private height: number;
+  constructor(
+    setPNGBuf: (buf: Buffer) => void,
+    mainWindow: BrowserWindow,
+    width: number,
+    height: number
+  ) {
+    this.setPNGBuf = setPNGBuf;
+    this.mainWindow = mainWindow;
+    this.width = width;
+    this.height = height;
+  }
+
+  createCapWin = () => {
+    if (this.capWin) {
+      try {
+        this.capWin.close();
+      } catch (e) {}
+    }
+
+    try {
+      this.mainWindow.minimize();
+    } catch (e) {}
+
+    this.capWin = new BrowserWindow({
+      width: 100,
+      height: 35,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+      },
+      alwaysOnTop: true,
+      frame: false,
+      fullscreen: false,
+      resizable: false,
+      x: 25,
+      y: 25,
+      transparent: true,
+    });
+    this.capWin.loadFile(path.join(__dirname, "..", "web", "wincap.html"));
+  };
+
+  closeCapWin = () => {
+    if (this.capWin) {
+      try {
+        this.capWin.close();
+        this.mainWindow.maximize();
+      } catch (e) {}
+    }
+  };
+
+  reshowCapWin = () => {
+    if (this.capWin) {
+      try {
+        this.capWin.setPosition(25, 25);
+        this.capWin.setSize(100, 35);
+      } catch (e) {}
+    }
+  };
+
+  ready2cap = () => {
+    if (this.capWin) {
+      try {
+        this.capWin.setPosition(0, 0);
+        this.capWin.setBackgroundColor("#00000050");
+        this.capWin.setSize(this.width, this.height);
+      } catch (e) {}
+    }
+  };
+
+  destroyCapWin = () => {
+    if (this.capWin) {
+      try {
+        this.capWin.close();
+      } catch (e) {}
+    }
+  };
+
+  attachIPC = () => {
+    // [Frontend] wincap
+    // => Summon capture window
+    // [Wincap] cat (data)
+    // => Request Capture
+    // [Wincap] esc
+    // => Cancel capture
+    // [Wincap] cap
+    // => Start area select
+    // [Wincap] btp
+    // => Close capture window
+
+    ipcMain.on("wincap", (event, arg) => {
+      this.createCapWin();
+    });
+    ipcMain.on("btp", (event, arg) => {
+      this.closeCapWin();
+    });
+    ipcMain.on("cap", (event, arg) => {
+      this.ready2cap();
+    });
+    ipcMain.on("esc", (event, arg) => {
+      this.reshowCapWin();
+    });
+    ipcMain.on("cat", (event, arg) => {
+      this.destroyCapWin();
+      setTimeout(() => {
+        const dd = arg as {
+          start: { x: number; y: number };
+          end: { x: number; y: number };
+        };
+
+        cap({
+          format: "png",
+        }).then((img) => {
+          this.setPNGBuf(img);
+          this.mainWindow.webContents.send("cap", dd);
+
+          this.createCapWin();
+        });
+      }, 50);
+    });
+  };
+}
+
 const createWindow = () => {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
@@ -32,10 +160,21 @@ const createWindow = () => {
       nodeIntegration: true,
       contextIsolation: false,
     },
-    resizable: false,
+    resizable: true,
     width: width,
     height: height,
   });
+
+  const capwinHandler = new CapwinHandler(
+    (buf) => {
+      pngBuf = buf;
+    },
+    mainWindow,
+    width,
+    height
+  );
+
+  capwinHandler.attachIPC();
 
   setTimeout(() => {
     mainWindow.maximize();
@@ -45,70 +184,6 @@ const createWindow = () => {
 
     mainWindow.webContents.on("dom-ready", () => {
       mainWindow.webContents.send("screen", { width, height });
-    });
-
-    ipcMain.on("btp", (event, arg) => {
-      mainWindow.maximize();
-      capWin?.close();
-    });
-
-    ipcMain.on("cap", (event, arg) => {
-      capWin?.setPosition(0, 0);
-      capWin?.setSize(width, height);
-      console.log("cap");
-    });
-
-    ipcMain.on("esc", (event, arg) => {
-      capWin?.setFullScreen(false);
-      capWin?.setKiosk(false);
-      capWin?.setPosition(25, 25);
-      capWin?.setSize(100, 35);
-    });
-
-    ipcMain.on("cat", (event, arg) => {
-      setTimeout(() => {
-        console.log(arg);
-        const dd = arg as {
-          start: { x: number; y: number };
-          end: { x: number; y: number };
-        };
-
-        cap({
-          format: "png",
-        }).then((img) => {
-          pngBuf = img;
-          mainWindow.webContents.send("cap", dd);
-
-          capWin?.setFullScreen(false);
-          capWin?.setKiosk(false);
-          capWin?.setPosition(25, 25);
-          capWin?.setSize(100, 35);
-        });
-      }, 50);
-    });
-
-    ipcMain.on("wincap", (event, arg) => {
-      mainWindow.minimize();
-      try {
-        
-      if(capWin) capWin?.close();
-      } catch(e) {}
-      capWin = new BrowserWindow({
-        width: 100,
-        height: 35,
-        webPreferences: {
-          nodeIntegration: true,
-          contextIsolation: false,
-        },
-        alwaysOnTop: true,
-        frame: false,
-        fullscreen: false,
-        resizable: false,
-        x: 25,
-        y: 25,
-        transparent: true,
-      });
-      capWin?.loadFile(path.join(__dirname, "..", "web", "wincap.html"));
     });
   }, 100);
 };
