@@ -13,16 +13,40 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-let pngBuf: Buffer;
+let pngBuf: {
+  [key: string]: [
+    Buffer,
+    {
+      start: { x: number; y: number };
+      end: { x: number; y: number };
+    }
+  ];
+} = {};
 
 class CapwinHandler {
-  private setPNGBuf: (buf: Buffer) => void;
+  private setPNGBuf: (
+    buf: [
+      Buffer,
+      {
+        start: { x: number; y: number };
+        end: { x: number; y: number };
+      }
+    ]
+  ) => void;
   private mainWindow: BrowserWindow;
   private capWin: BrowserWindow | null = null;
   private width: number;
   private height: number;
   constructor(
-    setPNGBuf: (buf: Buffer) => void,
+    setPNGBuf: (
+      buf: [
+        Buffer,
+        {
+          start: { x: number; y: number };
+          end: { x: number; y: number };
+        }
+      ]
+    ) => void,
     mainWindow: BrowserWindow,
     width: number,
     height: number
@@ -115,6 +139,7 @@ class CapwinHandler {
     });
     ipcMain.on("btp", (event, arg) => {
       this.closeCapWin();
+      this.mainWindow.webContents.send("cap");
     });
     ipcMain.on("cap", (event, arg) => {
       this.ready2cap();
@@ -133,8 +158,8 @@ class CapwinHandler {
         cap({
           format: "png",
         }).then((img) => {
-          this.setPNGBuf(img);
-          this.mainWindow.webContents.send("cap", dd);
+          this.setPNGBuf([img, dd]);
+          this.mainWindow.webContents.send("cap");
 
           this.createCapWin();
         });
@@ -149,11 +174,28 @@ const createWindow = () => {
 
   // protocol handler
   protocol.handle("image", (req) => {
-    return new Response(pngBuf, {
-      headers: {
-        "Content-Type": "image/png",
-      },
-    });
+    const url = new URL(req.url);
+    const path = url.pathname.replace("/", "");
+    if (path.startsWith("list")) {
+      return new Response(JSON.stringify(Object.keys(pngBuf)));
+    }
+    const qr = url.searchParams.get("qr");
+    if (qr === "rm") {
+      delete pngBuf[path];
+      return new Response("OK");
+    }
+    if (qr === "pos") {
+      return new Response(JSON.stringify(pngBuf[path][1]));
+    }
+    if (qr === "get") {
+      return new Response(pngBuf[path][0], {
+        headers: {
+          "Content-Type": "image/png",
+        },
+      });
+    }
+
+    return new Response("Not Found", { status: 404 });
   });
   const mainWindow = new BrowserWindow({
     webPreferences: {
@@ -166,8 +208,8 @@ const createWindow = () => {
   });
 
   const capwinHandler = new CapwinHandler(
-    (buf) => {
-      pngBuf = buf;
+    (data) => {
+      pngBuf[Math.random().toString(36).slice(2)] = data;
     },
     mainWindow,
     width,
