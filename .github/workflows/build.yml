@@ -25,11 +25,11 @@ jobs:
           name: canvas-plus-web
           path: ./dist
       - name: Copy files
-        run: copy electron\web\wincap.html dist\wincap.html
+        run: cp electron\web\wincap.html dist\wincap.html
       - name: Copy files
-        run: Remove-Item -Path electron\web -Recurse -Force
+        run: rm -rf electron\web
       - name: Copy files
-        run: xcopy /e /k /h /i dist electron\web
+        run: cp -r dist electron\web
       - name: Install dependencies
         working-directory: ./electron
         run: npm install
