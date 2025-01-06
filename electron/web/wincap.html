@@ -5,8 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WinCap</title>
   </head>
-  <body style="background: white; overflow: visible; margin: 0px; padding: 0px">
-    <div style="display: flex; gap: 0.2em" id="tools">
+  <body style="background: #000; overflow: visible; margin: 0px; padding: 0px">
+    <style>
+      button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+        padding: 0.5em;
+        border-radius: 0.5em;
+        background: #000000;
+        color: #fff;
+        flex: 1;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      * {
+        box-sizing: border-box;
+        user-select: none;
+      }
+    </style>
+    <div style="display: flex; gap: 0.1em; width: 100%" id="tools">
       <button id="btp">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -41,7 +64,7 @@
       });
       document.getElementById("cap").addEventListener("click", () => {
         window.require("electron").ipcRenderer.send("cap");
-        document.body.style.background = "rgba(0, 0, 0, 0.3)";
+        document.body.style.background = "#00000050";
         document.getElementById("tools").style.display = "none";
 
         setTimeout(() => {
