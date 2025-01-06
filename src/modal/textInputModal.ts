@@ -1,3 +1,5 @@
+import { addUpListener } from "../utils/listener";
+
 export default class TextInputModal {
   private modal: HTMLDivElement;
   private textarea: HTMLTextAreaElement;
@@ -51,8 +53,11 @@ export default class TextInputModal {
     this.modal.appendChild(contentBox);
 
     // Add event listeners
-    this.confirmButton.addEventListener("click", () => this.onConfirm());
-    this.cancelButton.addEventListener("click", () => this.onCancel());
+    const cfrmBind = this.onConfirm.bind(this);
+    addUpListener(this.confirmButton, () => cfrmBind());
+
+    const cnclBind = this.onCancel.bind(this);
+    addUpListener(this.cancelButton, () => cnclBind());
   }
 
   private onConfirm(): void {

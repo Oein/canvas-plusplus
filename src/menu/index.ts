@@ -1,3 +1,4 @@
+import { addUpListener } from "../utils/listener";
 import { setState } from "../utils/state";
 import setupColor from "./color";
 import setupPage from "./page";
@@ -29,7 +30,12 @@ let selectedTool = 0;
 export function applyToolExternal(id: string) {
   const button = document.querySelector(`.tool-button[data-tool="${id}"]`);
   if (!button) return;
-  (button as any).click();
+  (button as any).dispatchEvent(
+    new PointerEvent("pointerup", {
+      clientX: 0,
+      clientY: 0,
+    })
+  );
 }
 
 export default function setupTool() {
@@ -41,7 +47,7 @@ export default function setupTool() {
   toolButtons.forEach((button, idx) => {
     const toolID = button.getAttribute("data-tool");
     if (!toolID) return;
-    button.addEventListener("click", () => {
+    addUpListener(button, () => {
       if (selectedTool === idx && !tools[toolID].callEvenSelected) return;
       toolButtons[selectedTool].classList.remove("active");
       button.classList.add("active");
@@ -55,7 +61,7 @@ export default function setupTool() {
   document.querySelectorAll(".function-button").forEach((button) => {
     const functionID = button.getAttribute("data-function");
     if (!functionID) return;
-    button.addEventListener("click", () => {
+    addUpListener(button, () => {
       console.log(`Function selected: ${functionID}`);
       functions[functionID]();
     });

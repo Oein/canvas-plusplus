@@ -1,3 +1,4 @@
+import { addUpListener } from "../utils/listener";
 import { setState } from "../utils/state";
 
 export default function setupColor() {
@@ -8,7 +9,7 @@ export default function setupColor() {
       e.children[1] as HTMLInputElement
     ).value;
 
-    e.addEventListener("click", () => {
+    addUpListener(e, () => {
       if (focusedColor == i) {
         (e.children[1] as HTMLInputElement).click();
       } else clwrp[focusedColor].classList.remove("focus");

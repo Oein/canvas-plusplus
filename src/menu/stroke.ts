@@ -1,3 +1,4 @@
+import { addUpListener } from "../utils/listener";
 import { setState } from "../utils/state";
 
 export default function setupStroke() {
@@ -5,7 +6,7 @@ export default function setupStroke() {
   const stsel = document.getElementById("selstk");
   const strokeSizez = [3, 9, 15];
   strks.forEach((e, i) => {
-    e.addEventListener("click", () => {
+    addUpListener(e, () => {
       if (stsel) stsel.style.left = `calc(1.5rem * ${i})`;
       setState("STROKE", strokeSizez[i]);
     });

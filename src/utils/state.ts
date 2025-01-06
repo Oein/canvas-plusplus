@@ -1,3 +1,5 @@
+import { addUpListener } from "./listener";
+
 const svc = document.getElementById("stateViewerContent")! as HTMLTableElement;
 
 const ORIGINAL_STATE = {
@@ -152,7 +154,7 @@ for (const key in state) {
   }
 }
 
-document.getElementById("st-saf")?.addEventListener("click", () => {
+addUpListener(document.getElementById("st-saf"), () => {
   // download state as file
   const a = document.createElement("a");
   a.href = URL.createObjectURL(
@@ -162,7 +164,7 @@ document.getElementById("st-saf")?.addEventListener("click", () => {
   a.click();
 });
 
-document.getElementById("st-lff")?.addEventListener("click", () => {
+addUpListener(document.getElementById("st-lff"), () => {
   // load state from file
   const input = document.createElement("input");
   input.type = "file";

@@ -1,3 +1,5 @@
+import { addUpListener } from "../utils/listener";
+
 export default class CoordinateInputModal {
   private modal: HTMLDivElement;
   private xInput: HTMLInputElement;
@@ -72,9 +74,9 @@ export default class CoordinateInputModal {
     xKeyboardIcon.style.height = "40px";
     xKeyboardIcon.style.width = "40px";
     xKeyboardIcon.style.textAlign = "center";
-    xKeyboardIcon.addEventListener("click", () =>
-      this.toggleKeypad(this.xInput)
-    );
+    const tkpdBind = this.toggleKeypad.bind(this);
+    const xInput = this.xInput;
+    addUpListener(xKeyboardIcon, () => tkpdBind(xInput));
 
     xContainer.appendChild(xLabel);
     xContainer.appendChild(this.xInput);
@@ -108,9 +110,9 @@ export default class CoordinateInputModal {
     yKeyboardIcon.style.height = "40px";
     yKeyboardIcon.style.width = "40px";
     yKeyboardIcon.style.textAlign = "center";
-    yKeyboardIcon.addEventListener("click", () =>
-      this.toggleKeypad(this.yInput)
-    );
+    const tgkpBind = this.toggleKeypad.bind(this);
+    const yInput = this.yInput;
+    addUpListener(yKeyboardIcon, () => tgkpBind(yInput));
 
     yContainer.appendChild(yLabel);
     yContainer.appendChild(this.yInput);
@@ -163,11 +165,12 @@ export default class CoordinateInputModal {
         button.style.borderRadius = "4px";
         button.style.cursor = "pointer";
 
-        button.addEventListener("click", () => {
+        const activeInput = this.activeInput;
+        addUpListener(button, () => {
           if (key === "←") {
-            this.activeInput!.value = this.activeInput!.value.slice(0, -1);
+            activeInput!.value = activeInput!.value.slice(0, -1);
           } else {
-            this.activeInput!.value += key;
+            activeInput!.value += key;
           }
         });
 
@@ -184,8 +187,10 @@ export default class CoordinateInputModal {
     this.modal.appendChild(contentBox);
 
     // Add event listeners
-    this.confirmButton.addEventListener("click", () => this.onConfirm());
-    this.cancelButton.addEventListener("click", () => this.onCancel());
+    const cfrmBind = this.onConfirm.bind(this);
+    addUpListener(this.confirmButton, () => cfrmBind());
+    const cnclBind = this.onCancel.bind(this);
+    addUpListener(this.cancelButton, () => cnclBind());
   }
 
   private toggleKeypad(input: HTMLInputElement): void {

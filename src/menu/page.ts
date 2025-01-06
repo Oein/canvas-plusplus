@@ -1,4 +1,5 @@
 import { manager } from "../main";
+import { addUpListener } from "../utils/listener";
 
 export default function setupPage() {
   const updateIndicator = () => {
@@ -8,12 +9,12 @@ export default function setupPage() {
       manager.instances.length
     }`;
   };
-  document.getElementById("right")?.addEventListener("click", () => {
+  addUpListener(document.getElementById("right")!, () => {
     manager.nextInstance();
     updateIndicator();
   });
 
-  document.getElementById("left")?.addEventListener("click", () => {
+  addUpListener(document.getElementById("left")!, () => {
     manager.prevInstance();
     updateIndicator();
   });

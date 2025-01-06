@@ -4,6 +4,7 @@ import setupTool, { applyToolExternal, tools } from "./menu";
 import { getState } from "./utils/state";
 import { decode } from "cbor-x";
 import { SelTool } from "./menu/tools/sel";
+import { addUpListener } from "./utils/listener";
 
 export let manager: InstanceManager;
 
@@ -200,14 +201,17 @@ const main = () => {
   };
   document.addEventListener("paste", pasteData);
 
-  document.getElementById("stv")?.addEventListener("click", (e) => {
+  addUpListener(document.getElementById("stv"), (_, e) => {
     const self = e.target as HTMLElement;
     self.style.display = "none";
   });
   document.getElementById("stvc")?.addEventListener("click", (e) => {
     e.stopPropagation();
   });
-  document.getElementById("cfg")?.addEventListener("click", (e) => {
+  addUpListener(document.getElementById("stvc"), (_, e) => {
+    e.stopPropagation();
+  });
+  addUpListener(document.getElementById("cfg"), (_, e) => {
     e.stopPropagation();
     const wp = document.getElementById("stv");
     if (wp) {
