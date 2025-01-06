@@ -1,8 +1,8 @@
 {
   "name": "canvas-plus-plus",
-  "version": "2.2.0",
+  "version": "2.4.0",
   "main": "./dist/index.js",
-  "description": "Two.JS를 활용한 그림판",
+  "description": "오인오인 그림판",
   "license": "MIT",
   "author": {
     "name": "박오인",
@@ -24,14 +24,13 @@
     "screenshot-desktop": "^1.15.0"
   },
   "build": {
-    "appId": "kr.oein.canvas-plus",
+    "appId": "kr.oein.canvas-plusplus",
     "directories": {
       "output": "releases"
     },
     "win": {
       "defaultArch": "x64",
       "target": [
-        "portable",
         "zip"
       ]
     },
