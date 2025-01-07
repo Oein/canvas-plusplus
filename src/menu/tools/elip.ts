@@ -42,7 +42,8 @@ class ElipTool implements Tool {
       let radiusY = Math.abs(height / 2);
 
       if (isShift()) {
-        const min = Math.min(radiusX, radiusY);
+        let min = Math.min(radiusX, radiusY);
+        if (getState("FIT2MAX")) min = Math.max(radiusX, radiusY);
         radiusX = min;
         radiusY = min;
       }
@@ -67,7 +68,8 @@ class ElipTool implements Tool {
       let radiusY = Math.abs(height / 2);
 
       if (isShift()) {
-        const min = Math.min(radiusX, radiusY);
+        let min = Math.min(radiusX, radiusY);
+        if (getState("FIT2MAX")) min = Math.max(radiusX, radiusY);
         radiusX = min;
         radiusY = min;
       }

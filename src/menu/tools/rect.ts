@@ -40,7 +40,8 @@ class RectTool implements Tool {
       if (isShift()) {
         const absWidth = Math.abs(width);
         const absHeight = Math.abs(height);
-        const min = Math.min(absWidth, absHeight);
+        let min = Math.min(absWidth, absHeight);
+        if (getState("FIT2MAX")) min = Math.max(absWidth, absHeight);
         width = width < 0 ? -min : min;
         height = height < 0 ? -min : min;
       }
@@ -62,7 +63,8 @@ class RectTool implements Tool {
       if (isShift()) {
         const absWidth = Math.abs(width);
         const absHeight = Math.abs(height);
-        const min = Math.min(absWidth, absHeight);
+        let min = Math.min(absWidth, absHeight);
+        if (getState("FIT2MAX")) min = Math.max(absWidth, absHeight);
         width = width < 0 ? -min : min;
         height = height < 0 ? -min : min;
       }

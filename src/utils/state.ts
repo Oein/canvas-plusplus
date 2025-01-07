@@ -11,6 +11,8 @@ const ORIGINAL_STATE = {
   SHIFTTOOL: false,
   RCLICK2ERASE: true,
 
+  FIT2MAX: true,
+
   SNAP_DEG: 2.5,
   PEN_MIN_DIST: 1,
   TEXT_RES: 1.5,
@@ -41,6 +43,7 @@ const stateDesc: any = {
   LITTLE_MOVE_MULTIPLIER: "Shift이동시 이동 거리 배율",
   CLIPBOARD_PREFIX: "클립보드에 복사할 때 사용할 접두어",
   SAVE_EXTENSION: "저장할 파일의 확장자",
+  FIT2MAX: "도형을 그릴때 최대 크기에 맞추기",
 };
 
 function createSVCEelment(key: string, val: string | boolean | number) {
@@ -137,6 +140,14 @@ if (localStorage.getItem("state")) {
     state = { ...ORIGINAL_STATE };
   }
 }
+
+for (const key in ORIGINAL_STATE) {
+  if (!(key in state)) {
+    state[key] = (ORIGINAL_STATE as any)[key];
+  }
+}
+
+localStorage.setItem("state", JSON.stringify(state));
 
 (window as any).getState = getState;
 (window as any).setState = setState;

@@ -40,7 +40,9 @@ class TriTool implements Tool {
 
       if (isShift()) {
         // 정삼각형
-        const min = Math.min(Math.abs(width), Math.abs(height));
+        let min = Math.min(Math.abs(width), Math.abs(height));
+        if (getState("FIT2MAX"))
+          min = Math.max(Math.abs(width), Math.abs(height));
         width = (width > 0 ? 1 : -1) * min;
         height = ((height > 0 ? 1 : -1) * min * Math.sqrt(3)) / 2;
       }
@@ -70,7 +72,9 @@ class TriTool implements Tool {
 
       if (isShift()) {
         // 정삼각형
-        const min = Math.min(Math.abs(width), Math.abs(height));
+        let min = Math.min(Math.abs(width), Math.abs(height));
+        if (getState("FIT2MAX"))
+          min = Math.max(Math.abs(width), Math.abs(height));
         width = (width > 0 ? 1 : -1) * min;
         height = ((height > 0 ? 1 : -1) * min * Math.sqrt(3)) / 2;
       }

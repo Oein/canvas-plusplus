@@ -38,6 +38,7 @@ export class LineTool implements Tool {
           xmove = endX - startX;
           ymove = endY - startY;
           minMove = Math.abs(Math.min(xmove, ymove));
+          if (getState("FIT2MAX")) minMove = Math.abs(Math.max(xmove, ymove));
           xneg = xmove < 0 ? -1 : 1;
           yneg = ymove < 0 ? -1 : 1;
           return { x: startX + minMove * xneg, y: startY + minMove * yneg };
@@ -47,6 +48,7 @@ export class LineTool implements Tool {
           xmove = endX - startX;
           ymove = endY - startY;
           minMove = Math.abs(Math.min(xmove, ymove));
+          if (getState("FIT2MAX")) minMove = Math.abs(Math.max(xmove, ymove));
           xneg = xmove < 0 ? -1 : 1;
           yneg = ymove < 0 ? -1 : 1;
           return { x: startX + minMove * xneg, y: startY + minMove * yneg };
@@ -56,6 +58,7 @@ export class LineTool implements Tool {
           xmove = endX - startX;
           ymove = endY - startY;
           minMove = Math.abs(Math.min(xmove, ymove));
+          if (getState("FIT2MAX")) minMove = Math.abs(Math.max(xmove, ymove));
           xneg = xmove < 0 ? -1 : 1;
           yneg = ymove < 0 ? -1 : 1;
           return { x: startX + minMove * xneg, y: startY + minMove * yneg };
@@ -65,6 +68,7 @@ export class LineTool implements Tool {
           xmove = endX - startX;
           ymove = endY - startY;
           minMove = Math.abs(Math.min(xmove, ymove));
+          if (getState("FIT2MAX")) minMove = Math.abs(Math.max(xmove, ymove));
           xneg = xmove < 0 ? -1 : 1;
           yneg = ymove < 0 ? -1 : 1;
           return { x: startX + minMove * xneg, y: startY + minMove * yneg };
