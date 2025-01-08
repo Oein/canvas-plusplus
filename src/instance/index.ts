@@ -70,8 +70,10 @@ export class Instance {
     this.root.className = "instance";
 
     this.two = new Two({
-      fullscreen: true,
+      type: Two.Types.canvas,
     });
+    this.two.width = window.innerWidth;
+    this.two.height = window.innerHeight;
     this.two.appendTo(this.root);
     root.appendChild(this.root);
 
@@ -686,24 +688,13 @@ export class Instance {
   }
 
   exportAsImage() {
-    const svgElement = this.two.renderer.domElement;
-    const svgData = new XMLSerializer().serializeToString(svgElement);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return Promise.reject("Failed to get 2d context");
-    const img = new Image();
-    const blob = new Blob([svgData], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-
-    return new Promise<string>((resolve) => {
-      img.onload = () => {
-        canvas.width = img.width * getState("EXPORT_IMAGE_SCALE");
-        canvas.height = img.height * getState("EXPORT_IMAGE_SCALE");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        URL.revokeObjectURL(url);
-        resolve(canvas.toDataURL("image/png"));
-      };
-      img.src = url;
+    const canvas = this.two.renderer.domElement as HTMLCanvasElement;
+    return new Promise<string>((resolve, rej) => {
+      canvas.toBlob((blob) => {
+        if (!blob) return rej("Failed to export as image");
+        const url = URL.createObjectURL(blob);
+        resolve(url);
+      });
     });
   }
 
@@ -721,6 +712,10 @@ export class Instance {
     this.clear();
 
     for (const element of data) {
+      if (typeof element !== "object") {
+        console.error("Invalid element", element);
+        continue;
+      }
       if (element.type === "image") {
         const img = new Image();
 

@@ -48,4 +48,12 @@ export default class InstanceManager {
     this.instances = [];
     this.focusedInstance = -1;
   }
+
+  resize() {
+    this.instances.forEach((inst) => {
+      inst.two.width = window.innerWidth;
+      inst.two.height = window.innerHeight;
+      inst.two.update();
+    });
+  }
 }

@@ -13,6 +13,7 @@ export default function renderTextToImageWebPPrecise(text: string): string {
   const fontSize = 48 * getState("TEXT_RES");
   const lineHeight = fontSize * 1.4; // Adjust line height as needed
   context.font = `${fontSize}px Arial`;
+  context.fillStyle = getState("COLOR");
 
   // Split the text into lines based on \n
   const lines = text.split("\n");
@@ -40,7 +41,7 @@ export default function renderTextToImageWebPPrecise(text: string): string {
   context.textBaseline = "top";
 
   // Render the text
-  context.fillStyle = "#000000"; // Black text
+  context.fillStyle = getState("COLOR");
   lines.forEach((line, index) => {
     const y = index * lineHeight * scale; // Vertical position per line
     context.fillText(line, 0, y);

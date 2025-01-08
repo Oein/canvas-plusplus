@@ -1,6 +1,7 @@
 import { registerTool } from "..";
 import { manager } from "../../main";
 import createCanvas from "../../utils/createCanvas";
+import getFillColor, { need2fill } from "../../utils/getFillColor";
 import {
   addDownListener,
   addMoveListener,
@@ -29,6 +30,7 @@ class ElipTool implements Tool {
 
       inst.ctx.strokeStyle = getState("COLOR");
       inst.ctx.lineWidth = getState("STROKE");
+      inst.ctx.fillStyle = getFillColor();
     });
 
     const d2 = addMoveListener(document, (pos) => {
@@ -54,6 +56,7 @@ class ElipTool implements Tool {
       inst.ctx.beginPath();
       inst.ctx.ellipse(xCenter, yCenter, radiusX, radiusY, 0, 0, 2 * Math.PI);
       inst.ctx.stroke();
+      if (need2fill()) inst.ctx.fill();
     });
 
     const d3 = addUpListener(document, (pos) => {
@@ -82,7 +85,7 @@ class ElipTool implements Tool {
         y: yCenter,
         xRadius: radiusX,
         yRadius: radiusY,
-        fillColor: "transparent",
+        fillColor: getFillColor(),
         strokeColor: getState("COLOR"),
         strokeWidth: getState("STROKE"),
       });

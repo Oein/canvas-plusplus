@@ -12,6 +12,8 @@ const ORIGINAL_STATE = {
   RCLICK2ERASE: true,
 
   FIT2MAX: true,
+  FILLTOOL: false,
+  ATBOTTOM: false,
 
   SNAP_DEG: 2.5,
   PEN_MIN_DIST: 1,
@@ -20,7 +22,6 @@ const ORIGINAL_STATE = {
   IMAGE_GLOBAL_PADDING: Math.min(window.innerWidth, window.innerHeight) * 0.25,
   MIN_SELECT_PERCENT: 0.1,
 
-  EXPORT_IMAGE_SCALE: 3,
   LITTLE_MOVE_MULTIPLIER: 0.4,
 
   CLIPBOARD_PREFIX: "[aris_is_love]!",
@@ -39,12 +40,27 @@ const stateDesc: any = {
   TEXT_RES: "텍스트 이미지 해상도",
   IMAGE_GLOBAL_PADDING: "이미지/텍스트 추가 시 화면 가장자리와의 최소 간격",
   MIN_SELECT_PERCENT: "선택 영역 최소 크기 비율",
-  EXPORT_IMAGE_SCALE: "내보낼 이미지의 배율",
   LITTLE_MOVE_MULTIPLIER: "Shift이동시 이동 거리 배율",
   CLIPBOARD_PREFIX: "클립보드에 복사할 때 사용할 접두어",
   SAVE_EXTENSION: "저장할 파일의 확장자",
   FIT2MAX: "도형을 그릴때 최대 크기에 맞추기",
+  FILLTOOL: "채우기 도구 사용",
+  ATBOTTOM: "도구 메뉴를 화면 하단에 표시 (재시작 필요)",
 };
+
+function save2storage() {
+  localStorage.setItem(
+    "state",
+    JSON.stringify({
+      ...state,
+      SHIFT: false,
+      SHIFTTOOL: false,
+      COLOR: "#000000",
+      STROKE: 3,
+      DASHLINE: [],
+    })
+  );
+}
 
 function createSVCEelment(key: string, val: string | boolean | number) {
   const tr = document.createElement("tr");
@@ -76,6 +92,8 @@ function createSVCEelment(key: string, val: string | boolean | number) {
         : input.type == "number"
         ? parseFloat(input.value)
         : input.checked;
+
+    save2storage();
   };
   input.setAttribute("data-svc-key", key);
   td2.appendChild(input);
@@ -130,7 +148,7 @@ export function setState(key: string, value: any) {
     }
   }
 
-  localStorage.setItem("state", JSON.stringify(state));
+  save2storage();
 }
 
 if (localStorage.getItem("state")) {

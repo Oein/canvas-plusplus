@@ -7,3 +7,5 @@ import "./import";
 import "./pdf";
 import "./wincap";
 import "./shiftTool";
+
+import "./fill";

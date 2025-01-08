@@ -234,6 +234,20 @@ const main = () => {
       });
     });
   }, 50);
+
+  // window resize
+  window.addEventListener("resize", () => {
+    manager.resize();
+  });
+
+  if (getState("ATBOTTOM")) {
+    const disu = document.getElementById("disup");
+    if (disu)
+      (() => {
+        disu.style.top = "unset";
+        disu.style.bottom = "10px";
+      })();
+  }
 };
 
 main();

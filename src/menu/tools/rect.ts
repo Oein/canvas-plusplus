@@ -1,6 +1,7 @@
 import { registerTool } from "..";
 import { manager } from "../../main";
 import createCanvas from "../../utils/createCanvas";
+import getFillColor, { need2fill } from "../../utils/getFillColor";
 import {
   addDownListener,
   addMoveListener,
@@ -29,6 +30,7 @@ class RectTool implements Tool {
 
       inst.ctx.strokeStyle = getState("COLOR");
       inst.ctx.lineWidth = getState("STROKE");
+      inst.ctx.fillStyle = getFillColor();
     });
 
     const d2 = addMoveListener(document, (pos) => {
@@ -46,6 +48,7 @@ class RectTool implements Tool {
         height = height < 0 ? -min : min;
       }
 
+      if (need2fill()) inst.ctx.fillRect(startPos.x, startPos.y, width, height);
       inst.ctx.strokeRect(startPos.x, startPos.y, width, height);
     });
 
@@ -83,7 +86,7 @@ class RectTool implements Tool {
         y,
         width,
         height,
-        fillColor: "transparent",
+        fillColor: getFillColor(),
         strokeColor: getState("COLOR"),
         strokeWidth: getState("STROKE"),
       });

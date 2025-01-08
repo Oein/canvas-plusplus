@@ -1,6 +1,7 @@
 import { registerTool } from "..";
 import { manager } from "../../main";
 import createCanvas from "../../utils/createCanvas";
+import getFillColor, { need2fill } from "../../utils/getFillColor";
 import {
   addDownListener,
   addMoveListener,
@@ -29,6 +30,7 @@ class TriTool implements Tool {
 
       inst.ctx.strokeStyle = getState("COLOR");
       inst.ctx.lineWidth = getState("STROKE");
+      inst.ctx.fillStyle = getFillColor();
     });
 
     const d2 = addMoveListener(document, (pos) => {
@@ -59,6 +61,8 @@ class TriTool implements Tool {
       inst.ctx.lineTo(startPos.x + width / 2, sty + height);
       inst.ctx.closePath();
       inst.ctx.stroke();
+
+      if (need2fill()) inst.ctx.fill();
     });
 
     const d3 = addUpListener(document, (pos) => {
@@ -98,7 +102,7 @@ class TriTool implements Tool {
         y2: stY + height,
         x3: stX + width / 2,
         y3: stY,
-        fillColor: "transparent",
+        fillColor: getFillColor(),
         strokeColor: getState("COLOR"),
         strokeWidth: getState("STROKE"),
       });
