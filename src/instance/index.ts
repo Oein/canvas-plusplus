@@ -23,7 +23,7 @@ export class Instance {
   focused: boolean = true;
   renderRequested: boolean = false;
 
-  history: any[] = [[]];
+  history: [any[], any][] = [[[], {}]];
 
   // === index manager ===
   lastID: number = 0;
@@ -548,7 +548,7 @@ export class Instance {
       return this.exportElement(Number(id));
     });
 
-    this.history.push(elements);
+    this.history.push([elements, structuredClone(this.canvasData)]);
 
     if (this.history.length > 100) this.history.shift();
   }
@@ -556,28 +556,32 @@ export class Instance {
   undo() {
     if (this.history.length <= 1) return;
     this.history.pop();
-    const elements = this.history[this.history.length - 1];
+    const history = this.history[this.history.length - 1];
+    const elements = history[0];
+    const canvasData = history[1];
     this.clear();
 
-    for (const element of elements) {
+    for (const key in elements) {
+      const element = elements[key];
       if (element.type === "image") {
         this.appendImage(element);
       } else {
         const nid = this.getNewID();
-        this.twoElements[nid] = element.isPen
-          ? this.two.makePath(
-              element.points.map((v: { x: number; y: number }) => {
-                return new Two.Anchor(v.x, v.y);
-              }),
-              // @ts-ignore
-              false,
-              true
-            )
-          : this.two.makePath(
-              element.points.map((v: { x: number; y: number }) => {
-                return new Two.Anchor(v.x, v.y);
-              })
-            );
+        this.twoElements[nid] =
+          canvasData[key] === "PEN"
+            ? this.two.makePath(
+                element.points.map((v: { x: number; y: number }) => {
+                  return new Two.Anchor(v.x, v.y);
+                }),
+                // @ts-ignore
+                false,
+                true
+              )
+            : this.two.makePath(
+                element.points.map((v: { x: number; y: number }) => {
+                  return new Two.Anchor(v.x, v.y);
+                })
+              );
 
         const e = this.twoElements[nid];
         e.fill = element.fillColor;
@@ -586,6 +590,8 @@ export class Instance {
         e.dashes = element.dash;
         e.rotation = element.rotation;
         e.scale = element.scale;
+        this.canvasData[nid] = canvasData[key];
+        this.cachePolygon(nid);
       }
     }
   }

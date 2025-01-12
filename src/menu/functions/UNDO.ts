@@ -17,9 +17,7 @@ const isMac =
   );
 
 document.addEventListener("keydown", (e) => {
-  console.log(e);
   if ((isMac ? e.metaKey : e.ctrlKey) && e.key === "z") {
-    console.log("undo");
     manager.focused.undo();
     manager.focused.requestRender();
   }
