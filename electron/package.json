@@ -1,6 +1,6 @@
 {
   "name": "canvas-plus-plus",
-  "version": "2.7.0",
+  "version": "2.7.1",
   "main": "./dist/index.js",
   "description": "오인오인 그림판",
   "license": "MIT",
