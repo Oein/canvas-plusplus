@@ -82,6 +82,7 @@ export class SelTool implements Tool {
     let moveMultiplier = 1;
     const a = addDownListener(this.bboxElem, (pos, e) => {
       if (this.state !== "SELECTED") return;
+      console.groupCollapsed("[Move ☩]");
       e.stopPropagation();
       e.preventDefault();
 
@@ -125,12 +126,16 @@ export class SelTool implements Tool {
       e.preventDefault();
 
       this.state = "SELECTED";
+      console.groupCollapsed("[Move / save polygon ⭓]");
       for (const id of this.selectedObjects) {
         manager.focused.cachePolygon(id);
       }
+      console.groupEnd();
 
       this.instCanvas.style.cursor = "crosshair";
       manager.focused.saveAsHistory();
+
+      console.groupEnd();
     });
 
     this.bboxListenDestroiers.push(a);
@@ -172,6 +177,7 @@ export class SelTool implements Tool {
     let bboxHeight = 0;
     const a = addDownListener(this.bboxScaleElem, (pos, e) => {
       if (this.state !== "SELECTED") return;
+      console.groupCollapsed("[Scale 🔍]");
       e.stopPropagation();
       e.preventDefault();
 
@@ -258,6 +264,8 @@ export class SelTool implements Tool {
 
       this.instCanvas.style.cursor = "crosshair";
       manager.focused.saveAsHistory();
+
+      console.groupEnd();
     });
 
     this.bboxListenDestroiers.push(a);
@@ -319,6 +327,24 @@ export class SelTool implements Tool {
   }
 
   setupBBoxButtonEventHandler(el: HTMLElement, evHandler: () => any) {
+    let meDowned = false;
+    addDownListener(el, (_data, e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      meDowned = true;
+    });
+    addMoveListener(el, (_data, e) => {
+      if (!meDowned) return;
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    addUpListener(el, (_data, e) => {
+      if (!meDowned) return;
+      meDowned = false;
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
     el.addEventListener("pointerup", (e) => {
       e.preventDefault();
       setTimeout(() => evHandler(), 3);
@@ -329,6 +355,7 @@ export class SelTool implements Tool {
     const removeButton = document.createElement("div");
     this.setupBBoxToolButton("REMOVE", removeButton);
     this.setupBBoxButtonEventHandler(removeButton, () => {
+      console.groupCollapsed("[Remove 🗑️]");
       for (let i = 0; i < this.selectedObjects.length; i++) {
         manager.focused.removeElement(this.selectedObjects[i]);
       }
@@ -336,6 +363,7 @@ export class SelTool implements Tool {
       manager.focused.saveAsHistory();
 
       this.disselect();
+      console.groupEnd();
     });
 
     removeButton.innerHTML = `<svg style="width: 20px; height: 20px;"  xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>`;
@@ -352,12 +380,14 @@ export class SelTool implements Tool {
       const modal = new CoordinateInputModal(
         (resu) => {
           if (resu === null) return;
+          console.groupCollapsed("[Transform 🔄]");
           for (let i = 0; i < this.selectedObjects.length; i++) {
             manager.focused.transform(this.selectedObjects[i], resu.x, resu.y);
             manager.focused.cachePolygon(this.selectedObjects[i]);
           }
           manager.focused.requestRender();
           manager.focused.saveAsHistory();
+          console.groupEnd();
 
           setTimeout(() => {
             handleSelectBind(selected);
@@ -378,6 +408,7 @@ export class SelTool implements Tool {
     const flipXButton = document.createElement("div");
     this.setupBBoxToolButton("FLIPX", flipXButton);
     this.setupBBoxButtonEventHandler(flipXButton, () => {
+      console.groupCollapsed("[FlipX 🔄]");
       const bbox_X = parseFloat(this.bboxElem.style.left);
       const bbox_W = parseFloat(this.bboxElem.style.width);
       const bbox_CX = bbox_X + bbox_W / 2;
@@ -386,6 +417,7 @@ export class SelTool implements Tool {
 
       manager.focused.requestRender();
       manager.focused.saveAsHistory();
+      console.groupEnd();
     });
 
     flipXButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentcolor"><path d="M360-120H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h160v80H200v560h160v80Zm80 80v-880h80v880h-80Zm160-80v-80h80v80h-80Zm0-640v-80h80v80h-80Zm160 640v-80h80q0 33-23.5 56.5T760-120Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80q33 0 56.5 23.5T840-760h-80Z"/></svg>`;
@@ -397,6 +429,7 @@ export class SelTool implements Tool {
     const flipYButton = document.createElement("div");
     this.setupBBoxToolButton("FLIPY", flipYButton);
     this.setupBBoxButtonEventHandler(flipYButton, () => {
+      console.groupCollapsed("[FlipY 🔄]");
       const bbox_Y = parseFloat(this.bboxElem.style.top);
       const bbox_H = parseFloat(this.bboxElem.style.height);
       const bbox_CY = bbox_Y + bbox_H / 2;
@@ -405,6 +438,7 @@ export class SelTool implements Tool {
 
       manager.focused.requestRender();
       manager.focused.saveAsHistory();
+      console.groupEnd();
     });
 
     flipYButton.innerHTML = `<svg style="rotate: 90deg;" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentcolor"><path d="M360-120H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h160v80H200v560h160v80Zm80 80v-880h80v880h-80Zm160-80v-80h80v80h-80Zm0-640v-80h80v80h-80Zm160 640v-80h80q0 33-23.5 56.5T760-120Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80q33 0 56.5 23.5T840-760h-80Z"/></svg>`;
@@ -416,6 +450,7 @@ export class SelTool implements Tool {
     const copyButton = document.createElement("div");
     this.setupBBoxToolButton("COPY", copyButton);
     this.setupBBoxButtonEventHandler(copyButton, () => {
+      console.groupCollapsed("[Copy 📋]");
       const newSelected: number[] = [];
 
       for (let i = 0; i < this.selectedObjects.length; i++) {
@@ -429,6 +464,8 @@ export class SelTool implements Tool {
       setTimeout(() => {
         this.nextBBoxColor = "#575B977F";
         this.handleSelect(newSelected);
+        manager.focused.saveAsHistory();
+        console.groupEnd();
       }, 3);
     });
 
@@ -441,6 +478,7 @@ export class SelTool implements Tool {
     const copyButton = document.createElement("div");
     this.setupBBoxToolButton("COPY2CLIPBOARD", copyButton);
     this.setupBBoxButtonEventHandler(copyButton, () => {
+      console.groupCollapsed("[Copy2Clipboard 📋]");
       manager.focused.getClipboardData(this.selectedObjects).then((data) => {
         const buf = encode(data) as Uint8Array;
         let res = getState("CLIPBOARD_PREFIX");
@@ -457,6 +495,8 @@ export class SelTool implements Tool {
             [type]: blob,
           }),
         ]);
+        console.log("Copied to clipboard");
+        console.groupEnd();
       });
     });
 
@@ -490,6 +530,7 @@ export class SelTool implements Tool {
 
     const a = addDownListener(this.bboxRotateElem, (pos, e) => {
       if (this.state !== "SELECTED") return;
+      console.groupCollapsed("[Rotate 🔄]");
       e.stopPropagation();
       e.preventDefault();
 
@@ -545,12 +586,15 @@ export class SelTool implements Tool {
 
       this.state = "SELECTED";
 
+      console.groupCollapsed("[Rotate / save polygon ⭓]");
       for (const id of this.selectedObjects) {
         manager.focused.cachePolygon(id);
       }
+      console.groupEnd();
       if (this.selectedObjects.length > 0) {
         manager.focused.saveAsHistory();
       }
+      console.groupEnd();
     });
 
     this.bboxListenDestroiers.push(a);

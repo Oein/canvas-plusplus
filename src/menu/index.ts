@@ -7,20 +7,20 @@ import type { Destructor, Tool } from "./tools/type";
 
 export let functions: { [key: string]: () => void } = {};
 export function registerFunction(id: string, callback: () => void) {
-  console.log(`Function registered: ${id}`);
+  // console.log(`Function registered: ${id}`);
   functions[id] = callback;
 }
 
 export let tools: { [key: string]: Tool } = {};
 let __destructor: Destructor | null = null;
 export function registerTool(id: string, tool: Tool, applySelf = false) {
-  console.log(`Tool registered: ${id}`);
+  // console.log(`Tool registered: ${id}`);
   tools[id] = tool;
   if (applySelf) applyTool(id);
 }
 
 export function applyTool(id: string, isRecall = false) {
-  console.log(`Tool applied: ${id}`);
+  // console.log(`Tool applied: ${id}`);
   if (__destructor) __destructor();
   __destructor = tools[id].apply(isRecall);
 }
@@ -51,7 +51,7 @@ export default function setupTool() {
       if (selectedTool === idx && !tools[toolID].callEvenSelected) return;
       toolButtons[selectedTool].classList.remove("active");
       button.classList.add("active");
-      console.log(`Tool selected: ${toolID}`);
+      // console.log(`Tool selected: ${toolID}`);
 
       applyTool(toolID, selectedTool === idx);
       selectedTool = idx;
@@ -62,7 +62,7 @@ export default function setupTool() {
     const functionID = button.getAttribute("data-function");
     if (!functionID) return;
     addUpListener(button, () => {
-      console.log(`Function selected: ${functionID}`);
+      // console.log(`Function selected: ${functionID}`);
       functions[functionID]();
     });
   });

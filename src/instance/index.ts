@@ -9,6 +9,9 @@ import isPointInPolygon from "./pointInPoly";
 import getPolygonIntersection from "./polygonIntersect";
 import polygonArea from "./polygonArea";
 import { getState } from "../utils/state";
+import hslColor from "../utils/hslColor";
+import { generateStrokePolygon as generateTriangleStrokePolygon } from "./triPoly";
+import { generateRectangleStrokePolygon } from "./rectPoly";
 
 export class Instance {
   id: string;
@@ -62,7 +65,7 @@ export class Instance {
   }
 
   constructor(root: HTMLElement) {
-    console.log("Instance created");
+    console.log("[Instance 🎨] created");
 
     this.id = genID();
     this.root = document.createElement("div");
@@ -111,6 +114,18 @@ export class Instance {
       { x: props.x + props.width, y: props.y + props.height },
       { x: props.x, y: props.y + props.height },
     ];
+    if (props.fillColor === "transparent") {
+      this.canvasData[id] = "RECT";
+      this.cachecdPolygon[id] = generateRectangleStrokePolygon(
+        [
+          { x: props.x, y: props.y },
+          { x: props.x + props.width, y: props.y },
+          { x: props.x + props.width, y: props.y + props.height },
+          { x: props.x, y: props.y + props.height },
+        ],
+        props.strokeWidth
+      );
+    }
     return id;
   }
 
@@ -143,6 +158,13 @@ export class Instance {
     const id = this.getNewID();
     this.twoElements[id] = circle;
     this.cachecdPolygon[id] = [...computed];
+    if (props.fillColor === "transparent") {
+      this.canvasData[id] = "CIR";
+      this.cachecdPolygon[id] = generateStrokedPolygon(
+        computed,
+        props.strokeWidth
+      );
+    }
     return id;
   }
 
@@ -173,6 +195,18 @@ export class Instance {
       { x: props.x2, y: props.y2 },
       { x: props.x3, y: props.y3 },
     ];
+
+    if (props.fillColor === "transparent") {
+      this.canvasData[id] = "TRI";
+      this.cachecdPolygon[id] = generateTriangleStrokePolygon(
+        [
+          { x: props.x1, y: props.y1 },
+          { x: props.x2, y: props.y2 },
+          { x: props.x3, y: props.y3 },
+        ],
+        props.strokeWidth
+      );
+    }
     return id;
   }
 
@@ -225,6 +259,7 @@ export class Instance {
       { x: props.x2, y: props.y2 },
       props.strokeWidth
     );
+    this.canvasData[id] = "LINE";
     return id;
   }
 
@@ -425,16 +460,46 @@ export class Instance {
 
   cloneObject(id: number) {
     const element = this.twoElements[id];
+    if (element instanceof Two.Sprite) {
+      const newID = this.appendImage({
+        x: element.position.x,
+        y: element.position.y,
+        width: element.width,
+        height: element.height,
+        rotate: element.rotation,
+        image: element.texture.image as HTMLImageElement,
+      });
+      this.twoElements[newID].rotation = element.rotation;
+      if (typeof element.scale === "number")
+        this.twoElements[newID].scale = new Two.Vector(
+          element.scale,
+          element.scale
+        );
+      else
+        this.twoElements[newID].scale = new Two.Vector(
+          element.scale.x,
+          element.scale.y
+        );
 
-    const clone = this.two.makePath(
-      // @ts-ignore
-      element.vertices.map((v: Anchor) => {
-        return new Two.Anchor(v.x, v.y);
-      }),
-      // @ts-ignore
-      false,
-      true
-    );
+      return newID;
+    }
+
+    const clone =
+      this.canvasData[id] === "PEN"
+        ? this.two.makePath(
+            element.vertices.map((v: Anchor) => {
+              return new Two.Anchor(v.x, v.y);
+            }),
+            // @ts-ignore
+            false,
+            true
+          )
+        : this.two.makePath(
+            element.vertices.map((v: Anchor) => {
+              return new Two.Anchor(v.x, v.y);
+            })
+          );
+
     clone.fill = element.fill;
     clone.stroke = element.stroke;
     clone.linewidth = element.linewidth + 0;
@@ -464,11 +529,132 @@ export class Instance {
   }
 
   cachePolygon(id: number) {
+    // try {
+    //   throw new Error("Cache polygon");
+    // } catch (e: any) {
+    //   console.error(e);
+    // }
     const element = this.twoElements[id];
     const scaleX =
       typeof element.scale === "number" ? element.scale : element.scale.x;
     const scaleY =
       typeof element.scale === "number" ? element.scale : element.scale.y;
+    if (element.vertices.length == 2) {
+      const xydata = element.vertices.map((v: Anchor) => {
+        // Apply transform, rotation and scale
+        const cosTheta = Math.cos(element.rotation);
+        const sinTheta = Math.sin(element.rotation);
+
+        const x = v.x * scaleX;
+        const y = v.y * scaleY;
+
+        const newX = x * cosTheta - y * sinTheta;
+        const newY = x * sinTheta + y * cosTheta;
+
+        return {
+          x: newX + element.position.x,
+          y: newY + element.position.y,
+        };
+      });
+      this.cachecdPolygon[id] = computeLinePolygon(
+        xydata[0],
+        xydata[1],
+        element.linewidth
+      );
+      console.log("[CachePolygon ⭔] Line", this.cachecdPolygon[id]);
+      return;
+    }
+
+    if (this.canvasData[id] === "PEN") {
+      const poly = element.vertices.map((v: Anchor) => {
+        // Apply transform, rotation and scale
+        const cosTheta = Math.cos(element.rotation);
+        const sinTheta = Math.sin(element.rotation);
+
+        const x = v.x * scaleX;
+        const y = v.y * scaleY;
+
+        const newX = x * cosTheta - y * sinTheta;
+        const newY = x * sinTheta + y * cosTheta;
+
+        return {
+          x: newX + element.position.x,
+          y: newY + element.position.y,
+        };
+      });
+      this.cachecdPolygon[id] = generateStrokedPolygon(poly, element.linewidth);
+      console.log("[CachePolygon ⭔] Pen", this.cachecdPolygon[id]);
+      return;
+    }
+    if (this.canvasData[id] === "TRI") {
+      const poly = element.vertices.map((v: Anchor) => {
+        // Apply transform, rotation and scale
+        const cosTheta = Math.cos(element.rotation);
+        const sinTheta = Math.sin(element.rotation);
+
+        const x = v.x * scaleX;
+        const y = v.y * scaleY;
+
+        const newX = x * cosTheta - y * sinTheta;
+        const newY = x * sinTheta + y * cosTheta;
+
+        return {
+          x: newX + element.position.x,
+          y: newY + element.position.y,
+        };
+      });
+      this.cachecdPolygon[id] = generateTriangleStrokePolygon(
+        poly,
+        element.linewidth
+      );
+      console.log("[CachePolygon ⭔] Triangle", this.cachecdPolygon[id]);
+      return;
+    }
+    if (this.canvasData[id] === "CIR") {
+      const poly = element.vertices.map((v: Anchor) => {
+        // Apply transform, rotation and scale
+        const cosTheta = Math.cos(element.rotation);
+        const sinTheta = Math.sin(element.rotation);
+
+        const x = v.x * scaleX;
+        const y = v.y * scaleY;
+
+        const newX = x * cosTheta - y * sinTheta;
+        const newY = x * sinTheta + y * cosTheta;
+
+        return {
+          x: newX + element.position.x,
+          y: newY + element.position.y,
+        };
+      });
+      this.cachecdPolygon[id] = generateStrokedPolygon(poly, element.linewidth);
+      console.log("[CachePolygon ⭔] Circle", this.cachecdPolygon[id]);
+      return;
+    }
+    if (this.canvasData[id] === "RECT") {
+      const poly = element.vertices.map((v: Anchor) => {
+        // Apply transform, rotation and scale
+        const cosTheta = Math.cos(element.rotation);
+        const sinTheta = Math.sin(element.rotation);
+
+        const x = v.x * scaleX;
+        const y = v.y * scaleY;
+
+        const newX = x * cosTheta - y * sinTheta;
+        const newY = x * sinTheta + y * cosTheta;
+
+        return {
+          x: newX + element.position.x,
+          y: newY + element.position.y,
+        };
+      });
+      this.cachecdPolygon[id] = generateRectangleStrokePolygon(
+        poly,
+        element.linewidth
+      );
+      console.log("[CachePolygon ⭔] Rectangle", this.cachecdPolygon[id]);
+      return;
+    }
     this.cachecdPolygon[id] = element.vertices.map((v: Anchor) => {
       // Apply transform, rotation and scale
       const cosTheta = Math.cos(element.rotation);
@@ -485,6 +671,7 @@ export class Instance {
         y: newY + element.position.y,
       };
     });
+    console.log("[CachePolygon ⭔] Polygon", this.cachecdPolygon[id]);
   }
 
   removeElement(id: number) {
@@ -544,17 +731,25 @@ export class Instance {
   }
 
   saveAsHistory() {
+    console.groupCollapsed("[Save as history 📋]");
     const elements = Object.keys(this.twoElements).map((id) => {
       return this.exportElement(Number(id));
     });
 
-    this.history.push([elements, structuredClone(this.canvasData)]);
+    const historyData = [
+      structuredClone(elements),
+      structuredClone(this.canvasData),
+    ];
+    console.log("Save as history", historyData);
+    this.history.push(historyData as any);
 
     if (this.history.length > 100) this.history.shift();
+    console.groupEnd();
   }
 
   undo() {
     if (this.history.length <= 1) return;
+    console.groupCollapsed("[Undo ⏪]");
     this.history.pop();
     const history = this.history[this.history.length - 1];
     const elements = history[0];
@@ -567,6 +762,7 @@ export class Instance {
         this.appendImage(element);
       } else {
         const nid = this.getNewID();
+        console.groupCollapsed("[Undo.NewObj-Path ⏪]", nid);
         this.twoElements[nid] =
           canvasData[key] === "PEN"
             ? this.two.makePath(
@@ -585,15 +781,26 @@ export class Instance {
 
         const e = this.twoElements[nid];
         e.fill = element.fillColor;
+        console.log("{Fill}", element.fillColor);
         e.stroke = element.strokeColor;
+        console.log("{Stroke}", element.strokeColor);
         e.linewidth = element.strokeWidth;
         e.dashes = element.dash;
-        e.rotation = element.rotation;
-        e.scale = element.scale;
+        console.log("{Keys}", Object.keys(element));
         this.canvasData[nid] = canvasData[key];
         this.cachePolygon(nid);
+        console.log(
+          "{Path}",
+          element.points.map((v: { x: number; y: number }) => {
+            return new Two.Anchor(v.x, v.y);
+          })
+        );
+
+        console.groupEnd();
       }
     }
+
+    console.groupEnd();
   }
 
   exportElement(id: number, texture_as_url?: boolean): any {
@@ -663,18 +870,22 @@ export class Instance {
     }
     return {
       type: "path",
-      points: element.vertices.map((v: Anchor) => ({
-        x: v.x + elementPos.x,
-        y: v.y + elementPos.y,
-      })),
-      rotation: element.rotation,
-      scale:
-        typeof element.scale === "number"
-          ? element.scale
-          : {
-              x: element.scale.x,
-              y: element.scale.y,
-            },
+      points: element.vertices.map((v: Anchor) => {
+        const cosTheta = Math.cos(element.rotation);
+        const sinTheta = Math.sin(element.rotation);
+
+        const scaleX =
+          typeof element.scale === "number" ? element.scale : element.scale.x;
+        const scaleY =
+          typeof element.scale === "number" ? element.scale : element.scale.y;
+        const x = v.x * scaleX;
+        const y = v.y * scaleY;
+
+        const newX = x * cosTheta - y * sinTheta;
+        const newY = x * sinTheta + y * cosTheta;
+
+        return { x: newX + element.position.x, y: newY + element.position.y };
+      }),
 
       fillColor: element.fill,
       strokeColor: element.stroke,
@@ -878,5 +1089,45 @@ export class Instance {
     this.two.clear();
     this.two.unbind();
     this.root.remove();
+  }
+
+  cachedPolygonCanvas: HTMLCanvasElement | null = null;
+  showCachedPolygon() {
+    this.cachedPolygonCanvas = document.createElement("canvas");
+    const ctx = this.cachedPolygonCanvas.getContext("2d");
+    this.cachedPolygonCanvas.width = window.innerWidth;
+    this.cachedPolygonCanvas.height = window.innerHeight;
+
+    if (!ctx) return;
+
+    ctx.fillStyle = hslColor(0.5);
+    ctx.strokeStyle = hslColor(1);
+
+    for (const key in this.cachecdPolygon) {
+      const poly = this.cachecdPolygon[Number(key)];
+      if (!poly || poly.length < 2) {
+        console.log("Invalid polygon", poly, this.twoElements[Number(key)]);
+        continue;
+      }
+      ctx!.beginPath();
+      ctx!.moveTo(poly[0].x, poly[0].y);
+      for (let i = 1; i < poly.length; i++) {
+        ctx!.lineTo(poly[i].x, poly[i].y);
+      }
+      ctx!.closePath();
+      ctx!.stroke();
+      ctx!.fill();
+    }
+
+    this.cachedPolygonCanvas.style.position = "absolute";
+    this.cachedPolygonCanvas.style.top = "0";
+    this.cachedPolygonCanvas.style.left = "0";
+    this.cachedPolygonCanvas.style.zIndex = "9999";
+    document.body.appendChild(this.cachedPolygonCanvas);
+  }
+
+  hideCachedPolygon() {
+    this.cachedPolygonCanvas?.remove();
+    this.cachedPolygonCanvas = null;
   }
 }

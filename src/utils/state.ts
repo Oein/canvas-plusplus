@@ -134,7 +134,7 @@ export function getState<T = any>(key: string) {
 
 export function setState(key: string, value: any) {
   state[key] = value;
-  console.log(`State updated: ${key} = ${value}`);
+  // console.log(`State updated: ${key} = ${value}`);
   const input = svc.querySelector(
     `input[data-svc-key="${key}"]`
   ) as HTMLInputElement;

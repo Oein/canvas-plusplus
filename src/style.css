@@ -154,7 +154,6 @@ body {
   bottom: 0px;
   pointer-events: none;
   overflow: hidden;
-  transform: translateY(1000px);
 }
 
 #pagition {

@@ -5,7 +5,7 @@ export default class InstanceManager {
   instances: Instance[] = [];
   focusedInstance: number = -1;
   constructor(root: HTMLElement) {
-    console.log("InstanceManager created");
+    console.log("[InstanceManager 🖊️] Created");
     this.root = root;
   }
 
