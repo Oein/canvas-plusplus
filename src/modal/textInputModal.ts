@@ -1,4 +1,5 @@
 import { addUpListener } from "../utils/listener";
+import { getState } from "../utils/state";
 
 export default class TextInputModal {
   private modal: HTMLDivElement;
@@ -7,6 +8,7 @@ export default class TextInputModal {
   private cancelButton: HTMLButtonElement;
 
   constructor(private onDone: (result: string | null) => void) {
+    const isLMode = getState("LTEXT_INPUT") === true;
     // Create the modal container
     this.modal = document.createElement("div");
     this.modal.className = "modalWRP";
@@ -14,6 +16,15 @@ export default class TextInputModal {
     // Create the modal content box
     const contentBox = document.createElement("div");
     contentBox.className = "modalCTT";
+    if (isLMode) {
+      contentBox.style.maxWidth = "100vw";
+      contentBox.style.maxHeight = "100vh";
+      contentBox.style.display = "flex";
+      contentBox.style.flexDirection = "column";
+      contentBox.style.width = "calc(100% - 40px)";
+
+      contentBox.style.height = "calc(100% - 40px)";
+    }
 
     // Create the textarea
     this.textarea = document.createElement("textarea");
@@ -24,6 +35,14 @@ export default class TextInputModal {
     this.textarea.style.border = "1px solid #ccc";
     this.textarea.style.borderRadius = "4px";
     this.textarea.style.boxSizing = "border-box";
+    this.textarea.style.fontFamily = "var(--Font-base)";
+
+    if (isLMode) {
+      this.textarea.style.flexGrow = "1";
+      this.textarea.style.fontSize = "1.8rem";
+    }
+
+    const buttons = document.createElement("div");
 
     // Create the confirm button
     this.confirmButton = document.createElement("button");
@@ -48,8 +67,9 @@ export default class TextInputModal {
 
     // Append elements
     contentBox.appendChild(this.textarea);
-    contentBox.appendChild(this.confirmButton);
-    contentBox.appendChild(this.cancelButton);
+    buttons.appendChild(this.confirmButton);
+    buttons.appendChild(this.cancelButton);
+    contentBox.appendChild(buttons);
     this.modal.appendChild(contentBox);
 
     // Add event listeners

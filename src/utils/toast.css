@@ -1,0 +1,119 @@
+/* General Styles for Toast */
+.toast {
+  padding: 15px;
+  margin: 5px 0;
+  background-color: rgba(0, 0, 0, 0.7); /* Default dark background for toasts */
+  color: white;
+  border-radius: 5px;
+  font-size: 14px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  opacity: 1;
+  word-wrap: break-word; /* Allow the text to wrap within the toast container */
+  box-sizing: border-box; /* Include padding and borders in the total width */
+  transition: top 0.25s cubic-bezier(0.165, 0.84, 0.44, 1),
+    opacity 0.25s cubic-bezier(0.165, 0.84, 0.44, 1); /* Smooth animations */
+  display: flex;
+  align-items: center; /* Align content (spinner and text) */
+  justify-content: flex-start; /* Ensure the spinner and text are aligned horizontally */
+}
+
+/* Success Toast Style */
+.toast.success {
+  background-color: #4caf50; /* Green background for success messages */
+}
+
+/* Info Toast Style */
+.toast.info {
+  background-color: #2196f3; /* Blue background for informational messages */
+}
+
+/* Error Toast Style */
+.toast.error {
+  background-color: #f44336; /* Red background for error messages */
+}
+
+/* Loading Toast Style */
+.toast.loading {
+  background-color: #fff; /* Orange background for loading messages */
+  color: black; /* Black text color for loading messages */
+}
+
+/* Spinner SVG Styles */
+.toast.loading .spinner {
+  border: 3px solid rgba(255, 255, 255, 0.3); /* Light color for the spinner background */
+  border-top: 3px solid black; /* White color for the spinner's top part */
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1.3s ease-in-out infinite; /* Rotate the spinner */
+  margin-right: 10px; /* Space between the spinner and the text */
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Slide-In Animation */
+.toast.slide-in {
+  transform: translateY(-20px); /* Start above the final position */
+  opacity: 0; /* Start invisible */
+  animation: slideIn 0.25s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; /* Apply animation */
+}
+
+/* Slide-Out Animation */
+.toast.slide-out {
+  transform: translateY(-20px); /* Move upwards and fade */
+  opacity: 0; /* Fade out */
+  animation: slideOut 0.25s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; /* Apply slide-out animation */
+  z-index: 9950; /* Ensure the toast is below the new toast */
+}
+
+/* Keyframes for Slide-In Animation */
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px); /* Start above the final position */
+    opacity: 0; /* Start invisible */
+  }
+  to {
+    transform: translateY(0); /* Final position */
+    opacity: 1; /* Fully visible */
+  }
+}
+
+/* Keyframes for Slide-Out Animation */
+@keyframes slideOut {
+  from {
+    transform: translateY(0); /* Start from the final position */
+    opacity: 1; /* Fully visible */
+  }
+  to {
+    transform: translateY(-20px); /* Slide upwards */
+    opacity: 0; /* Fade out */
+  }
+}
+
+/* Positioning of Toasts */
+.toast-container {
+  position: fixed;
+  top: 20px; /* Start from the top of the page */
+  right: 20px; /* Align to the right side of the screen */
+}
+
+/* Responsive Toast Width */
+.toast {
+  width: 90%; /* Responsive width based on screen size */
+  max-width: 400px; /* Max width for larger screens */
+}
+
+/* Optional: Add specific styles for the text (increase readability) */
+.toast p {
+  margin: 0; /* Remove default margin around text */
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}

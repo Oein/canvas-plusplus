@@ -283,20 +283,6 @@ export class Instance {
     const imageYS = props.height / texture.image.height;
     image.scale = new Two.Vector(imageXS, imageYS);
 
-    // console.log(
-    //   "Width",
-    //   props.width,
-    //   "Height",
-    //   props.height,
-    //   "Image Width",
-    //   texture.image.width,
-    //   "Image Height",
-    //   texture.image.height,
-    //   "Scale",
-    //   imageXS,
-    //   imageYS
-    // );
-
     const id = this.getNewID();
     this.twoElements[id] = image;
     let halfWidth = props.width / 2;
@@ -383,12 +369,39 @@ export class Instance {
   }
 
   setScale(id: number, nscale: number): void;
-  setScale(id: number, sx: number, sy?: number) {
+  setScale(
+    id: number,
+    sx: {
+      x: number;
+      y: number;
+    }
+  ): void;
+  setScale(
+    id: number,
+    sx:
+      | number
+      | {
+          x: number;
+          y: number;
+        },
+    sy?: number
+  ) {
     const element = this.twoElements[id];
+    console.log("Scale", sx, sy);
     if (typeof sy === "undefined") {
+      if (typeof sx == "object") {
+        element.scale = new Two.Vector(sx.x, sx.y);
+        return;
+      }
       element.scale = sx;
       return;
-    } else element.scale = new Two.Vector(sx, sy);
+    } else {
+      if (typeof sx === "number") {
+        element.scale = new Two.Vector(sx, sy);
+        return;
+      }
+      element.scale = new Two.Vector(sx.x, sx.y);
+    }
   }
 
   scaleAboutSelf(id: number, sx: number, sy: number) {
@@ -730,6 +743,27 @@ export class Instance {
     return [];
   }
 
+  strcClone(data: any) {
+    const clone = JSON.parse(JSON.stringify(data));
+    // dfs in object, and clone html image
+    const dfs = (obj: any, clo: any) => {
+      for (const key in obj) {
+        if (obj[key] instanceof HTMLImageElement) {
+          clo[key] = obj[key];
+        } else if (key in clo && typeof obj[key] === "object") {
+          dfs(obj[key], clo[key]);
+        }
+      }
+    };
+
+    dfs(data, clone);
+
+    console.log("Original", data);
+    console.log("Cloned", clone);
+
+    return clone;
+  }
+
   saveAsHistory() {
     console.groupCollapsed("[Save as history 📋]");
     const elements = Object.keys(this.twoElements).map((id) => {
@@ -737,7 +771,7 @@ export class Instance {
     });
 
     const historyData = [
-      structuredClone(elements),
+      this.strcClone(elements),
       structuredClone(this.canvasData),
     ];
     console.log("Save as history", historyData);
@@ -786,6 +820,8 @@ export class Instance {
         console.log("{Stroke}", element.strokeColor);
         e.linewidth = element.strokeWidth;
         e.dashes = element.dash;
+        console.log("{Scale}", element.scale);
+        this.setScale(nid, element.scale);
         console.log("{Keys}", Object.keys(element));
         this.canvasData[nid] = canvasData[key];
         this.cachePolygon(nid);
@@ -874,12 +910,8 @@ export class Instance {
         const cosTheta = Math.cos(element.rotation);
         const sinTheta = Math.sin(element.rotation);
 
-        const scaleX =
-          typeof element.scale === "number" ? element.scale : element.scale.x;
-        const scaleY =
-          typeof element.scale === "number" ? element.scale : element.scale.y;
-        const x = v.x * scaleX;
-        const y = v.y * scaleY;
+        const x = v.x;
+        const y = v.y;
 
         const newX = x * cosTheta - y * sinTheta;
         const newY = x * sinTheta + y * cosTheta;
@@ -892,7 +924,14 @@ export class Instance {
       strokeWidth: element.linewidth,
       dash: element.dashes,
       isPen: this.canvasData[id] === "PEN",
-      cnavasData: this.canvasData[id],
+      canvasData: this.canvasData[id],
+      scale:
+        typeof element.scale === "number"
+          ? element.scale + 0
+          : {
+              x: element.scale.x + 0,
+              y: element.scale.y + 0,
+            },
     };
   }
 
@@ -990,8 +1029,7 @@ export class Instance {
         e.stroke = element.strokeColor;
         e.linewidth = element.strokeWidth;
         e.dashes = element.dash;
-        e.rotation = element.rotation;
-        e.scale = element.scale;
+        this.setScale(nid, element.scale);
 
         const poly = element.points.map((v: { x: number; y: number }) => {
           return { x: v.x, y: v.y };
@@ -1007,6 +1045,11 @@ export class Instance {
 
   async importFromClipboard(data: any[]) {
     let ids: number[] = [];
+    console.groupCollapsed(
+      "[ImportFromClipboard 📋] Import",
+      data.length,
+      "items"
+    );
     for (const element of data) {
       if (element.type === "image") {
         const img = new Image();
@@ -1067,17 +1110,15 @@ export class Instance {
         e.stroke = element.strokeColor;
         e.linewidth = element.strokeWidth;
         e.dashes = element.dash;
-        e.rotation = element.rotation;
-        e.scale = element.scale;
+        this.setScale(nid, element.scale);
 
-        const poly = element.points.map((v: { x: number; y: number }) => {
-          return { x: v.x, y: v.y };
-        });
-        const polystroke = generateStrokedPolygon(poly, element.strokeWidth);
-        this.cachecdPolygon[nid] = [...polystroke];
-        this.canvasData[nid] = element.isPen ? "PEN" : "PATH";
+        this.canvasData[nid] = element.canvasData;
+        // console.log("[CanvasData]", nid, element.canvasData);
+        this.cachePolygon(nid);
       }
     }
+
+    console.groupEnd();
 
     this.requestRender();
     this.saveAsHistory();

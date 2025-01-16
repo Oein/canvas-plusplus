@@ -2,9 +2,12 @@ import InstanceManager from "./instance/manager";
 import "./style.css";
 import setupTool, { applyToolExternal, tools } from "./menu";
 import { getState } from "./utils/state";
-import { decode } from "cbor-x";
+import { decode, encode } from "cbor-x";
 import { SelTool } from "./menu/tools/sel";
 import { addUpListener } from "./utils/listener";
+
+import "./utils/toast";
+import toastManager from "./utils/toast";
 
 export let manager: InstanceManager;
 
@@ -137,7 +140,6 @@ const main = () => {
     for (let i = 0; i < items.length; i++) {
       if (items[i].type === "text/plain") {
         items[i].getAsString((text) => {
-          // console.log(text);
           if (!text.startsWith(getState("CLIPBOARD_PREFIX"))) return;
           const data = text.slice(
             getState("CLIPBOARD_PREFIX").length
@@ -149,11 +151,8 @@ const main = () => {
           }
           const decoded = decode(u8a);
           manager.focused.importFromClipboard(decoded).then((el) => {
-            // console.log(el);
-            // console.log(tools.SEL);
             applyToolExternal("SEL");
             setTimeout(() => {
-              console.log(el);
               (tools.SEL as SelTool).handleSelect(el);
             });
           });
@@ -248,6 +247,79 @@ const main = () => {
         disu.style.bottom = "10px";
       })();
   }
+
+  const autoSaver = async () => {
+    const tid = toastManager.loading({
+      message: "자동저장 중...",
+      autoRemove: false,
+    });
+    console.groupCollapsed("[AutoSaver 📁]");
+
+    let res: any[] = [];
+    for (let i = 0; i < manager.instances.length; i++) {
+      toastManager.updateToast(
+        tid,
+        `자동저장 중... (${i + 1}/${manager.instances.length})`
+      );
+      console.log(
+        `[AutoSaver 📁] Saving instance ${i + 1} out of ${
+          manager.instances.length
+        }`
+      );
+
+      res.push(await manager.instances[i].exportAsJSON());
+      await new Promise((res) => setTimeout(res, 100));
+    }
+
+    toastManager.updateToast(tid, `자동저장 중... (파일 생성 중)`);
+
+    const file = encode(res);
+
+    const u8a2base64 = (u8a: Uint8Array) => {
+      let binstr = Array.prototype.map
+        .call(u8a, (ch) => String.fromCharCode(ch))
+        .join("");
+      return btoa(encodeURIComponent(binstr));
+    };
+
+    // to string
+    const str = u8a2base64(file);
+
+    const time = new Date();
+    const timeStr = `자동저장 - ${time.getFullYear()}년 ${
+      time.getMonth() + 1
+    }월 ${time.getDate()}일 ${time.getHours()}시 ${time.getMinutes()}분 ${time.getSeconds()}초${getState(
+      "SAVE_EXTENSION"
+    )}`;
+
+    const list = localStorage.getItem("autosave-list");
+    const listParsed = list ? JSON.parse(list) : [];
+    listParsed.push(timeStr);
+    while (listParsed.length > 8) {
+      const shi = listParsed.shift();
+      localStorage.removeItem("autosave-" + shi);
+    }
+    localStorage.setItem("autosave-list", JSON.stringify(listParsed));
+    localStorage.setItem("autosave-" + timeStr, str);
+
+    console.log("[AutoSaver 📁] Saved");
+    toastManager.updateToast(tid, `자동저장 완료!`);
+    setTimeout(() => {
+      toastManager.removeToast(tid);
+    }, 2000);
+    console.groupEnd();
+  };
+
+  setInterval(() => {
+    try {
+      autoSaver();
+    } catch (e) {}
+  }, 1000 * 60 * 5);
+
+  // setTimeout(() => {
+  //   autoSaver();
+  // }, 1000 * 7);
+  (window as any).autoSaver = autoSaver;
 };
 
 main();

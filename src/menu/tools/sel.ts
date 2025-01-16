@@ -633,7 +633,7 @@ export class SelTool implements Tool {
     // listen for ctrl c
     const listener = (e: KeyboardEvent) => {
       if (e.key === "c" && (isMac ? e.metaKey : e.ctrlKey)) {
-        console.log("copy2clipboard");
+        console.log("[Copy2Clipboard 📋]");
         manager.focused.getClipboardData(this.selectedObjects).then((data) => {
           const buf = encode(data) as Uint8Array;
           let res = getState("CLIPBOARD_PREFIX");
@@ -660,6 +660,10 @@ export class SelTool implements Tool {
   }
 
   handleSelect(objects: number[]) {
+    if (objects.length === 0) return;
+    if (this.state !== "IDLE") {
+      this.disselect();
+    }
     this.selectedObjects = objects;
     this.state = "SELECTED";
 

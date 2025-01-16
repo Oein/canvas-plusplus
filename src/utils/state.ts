@@ -10,6 +10,8 @@ const ORIGINAL_STATE = {
   SHIFT: false,
   SHIFTTOOL: false,
   RCLICK2ERASE: true,
+  LTEXT_INPUT: false,
+  AUTOSAVE: true,
 
   FIT2MAX: true,
   FILLTOOL: false,
@@ -46,6 +48,8 @@ const stateDesc: any = {
   FIT2MAX: "도형을 그릴때 최대 크기에 맞추기",
   FILLTOOL: "채우기 도구 사용",
   ATBOTTOM: "도구 메뉴를 화면 하단에 표시 (재시작 필요)",
+  LTEXT_INPUT: "텍스트 입력창을 크게",
+  AUTOSAVE: "자동 저장 (5분 간격)",
 };
 
 function save2storage() {
